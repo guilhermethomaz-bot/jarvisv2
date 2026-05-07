@@ -200,6 +200,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .prof-n{font-size:9px;color:#aaa;margin-top:3px;font-style:italic}
 
 /* Message */
+.cult-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.cult-item{background:var(--g2);border-radius:10px;padding:12px 14px;border:1px solid var(--bdr)}
+.cult-pilar{font-size:12px;font-weight:800;color:var(--bl);margin-bottom:8px;line-height:1.4}
+.cult-opts{display:flex;gap:6px;flex-wrap:wrap}
+.cult-opt{border:2px solid var(--bdr);border-radius:20px;padding:5px 12px;font-size:11px;
+  font-weight:700;cursor:pointer;color:#888;background:#fff;transition:all .15s;white-space:nowrap}
+.cult-opt:hover{border-color:var(--bl);color:var(--bl)}
+.cult-opt.sel-na{background:#ffebee;border-color:#b71c1c;color:#b71c1c}
+.cult-opt.sel-al{background:#fff3e0;border-color:#e65100;color:#e65100}
+.cult-opt.sel-ac{background:#e8f5e9;border-color:#1b5e20;color:#1b5e20}
+.cult-summary{background:var(--bl);border-radius:10px;padding:12px 14px;color:#fff;margin-bottom:12px}
+.cult-sum-t{font-size:9px;font-weight:800;color:#7fa8d4;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.cult-sum-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px}
+.cult-sum-l{color:#aac4e0;flex:0 0 120px;font-size:10px}
+.cult-sum-bar{flex:1;height:5px;background:rgba(255,255,255,.15);border-radius:3px}
+.cult-sum-f{height:5px;border-radius:3px;transition:width .4s}
+.cult-sum-v{color:var(--y);font-weight:700;flex:0 0 30px;text-align:right;font-size:10px}
 .msg-ta{width:100%;min-height:180px;border-radius:8px;border:1.5px solid var(--bdr);padding:10px;font-size:12px;line-height:1.6;color:var(--dk);resize:vertical;font-family:inherit;background:#fff}
 .msg-ta:focus{outline:none;border-color:var(--bl)}
 .msg-acts{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
@@ -363,6 +380,7 @@ footer span{color:var(--y);font-weight:700}
     <button class="ptab" onclick="setTab('plano',this)">📋 Plano</button>
     <button class="ptab" onclick="setTab('sim',this)">🧮 Simulador</button>
     <button class="ptab" onclick="setTab('perf',this)">⭐ Perfil</button>
+    <button class="ptab" onclick="setTab('cult',this)">🧭 Cultura</button>
     <button class="ptab" onclick="setTab('msg',this)">✉️ Mensagem</button>
   </div>
   <div class="pbody" id="pbody"></div>
@@ -392,6 +410,21 @@ const PLANS={
   "SIGLIND MOREIRA DE OLIVEIRA":{"nm": "Siglind Moreira", "cargo": "Exec 1/2 · Rampa", "tipo": "e12", "diag": "Começo do zero não é problema — é oportunidade de construir certo desde o início! Você chega em maio sem vícios. Objetivo: carteira de qualidade com faturamento verificado, onboarding desde o primeiro contato e rotina operacional sólida.", "obj": "Dar a largada certa. Meta de rampa batida com carteira qualificada e sellers faturando.", "gap_kpi": "Primeiro mês completo — tudo a construir com o padrão certo", "semanas": [{"t": "S1 · 05–09/Mai", "tema": "Imersão Total", "acoes": [{"txt": "Check-in presencial: metodologia FDVP, FAST, Diário de Bordo, o que é MAS/aderência", "urgente": true}, {"txt": "Campo com TL durante toda a semana — observação com feedback imediato de abordagem", "urgente": true}, {"txt": "Mapear território: clusters de sellers com faturamento >R$30k na área de atuação", "urgente": false}, {"txt": "Meta inicial: 2 conquistas com faturamento verificado e onboarding no primeiro contato", "urgente": false}, {"txt": "Capacitação: pitch do Mercado Pago e argumentação de valor do parcelado", "urgente": false}]}, {"t": "S2 · 12–16/Mai", "tema": "Primeiras Conquistas Autônomas", "acoes": [{"txt": "TL acompanha 1 dia, observa à distância nos demais — autonomia com suporte", "urgente": false}, {"txt": "3 conquistas com faturamento verificado >R$30k e perfil parcelado", "urgente": false}, {"txt": "Primeiro onboarding: Link de Pagamento ou Software PDV em toda visita", "urgente": true}, {"txt": "Lançamentos no FAST: revisão com TL para garantir que está tudo correto", "urgente": false}, {"txt": "Check-in diário às 08:30 e check-out às 18:00 — obrigatórios", "urgente": false}]}, {"t": "S3 · 19–23/Mai", "tema": "Consolidação do Ritmo", "acoes": [{"txt": "Sellers conquistados estão transacionando? Qual o faturamento atual? Revisão com TL", "urgente": true}, {"txt": "6-8 conquistas qualificadas acumuladas no mês", "urgente": false}, {"txt": "PRI: todos os sellers de M0 com pelo menos 1 transação", "urgente": false}, {"txt": "Mercado Crédito para sellers elegíveis — onboarding para engajamento", "urgente": false}]}, {"t": "S4 · 26–30/Mai", "tema": "Primeiro Fechamento", "acoes": [{"txt": "Sprint para fechar dentro da meta de rampa", "urgente": false}, {"txt": "Nenhum seller sem transação até dia 29", "urgente": true}, {"txt": "Balanço com TL: quais perfis geraram mais faturamento e aderência", "urgente": false}, {"txt": "Metas pessoais para junho com o TL", "urgente": false}]}]}
 };
 const PROFILE_CATS=[{"k": "comunicacao", "lbl": "Comunicação", "ico": "💬"}, {"k": "equipe", "lbl": "Trabalho em Equipe", "ico": "🤝"}, {"k": "engajamento", "lbl": "Engajamento", "ico": "🔥"}, {"k": "emocional", "lbl": "Inteligência Emocional", "ico": "🧠"}, {"k": "organizacao", "lbl": "Organização", "ico": "📋"}, {"k": "negociacao", "lbl": "Negociação e Persuasão", "ico": "🎯"}];
+
+const CULTURA_PILARES=[
+  {k:"valor",    lbl:"Criamos valor para os usuários"},
+  {k:"risco",    lbl:"Empreendemos assumindo riscos"},
+  {k:"execucao", lbl:"Executamos com excelência"},
+  {k:"beta",     lbl:"Estamos em beta contínuo"},
+  {k:"equipe",   lbl:"Competimos em equipe para ganhar"},
+  {k:"maximo",   lbl:"Damos o máximo e nos divertimos"}
+];
+const CULT_OPTS=[
+  {k:"na",  lbl:"Necessita alinhamento", cls:"sel-na", score:1},
+  {k:"al",  lbl:"Alinhado",              cls:"sel-al", score:2},
+  {k:"ac",  lbl:"Acima das expectativas",cls:"sel-ac", score:3}
+];
+
 
 </script>
 <script>
@@ -444,6 +477,13 @@ function curWeek(){
 function todayStr(){ return new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
 
 // ── localStorage ──
+function getCult(n){ try{return JSON.parse(localStorage.getItem('j_cult_'+n)||'{}');}catch(e){return{};} }
+function saveCult(n,d){ try{localStorage.setItem('j_cult_'+n,JSON.stringify(d));}catch(e){} }
+function setCultRat(nome,k,val){
+  const d=getCult(nome); d[k]=val; saveCult(nome,d);
+  renderTab();
+}
+
 function saveTodo(n,wi,ai,val){ try{localStorage.setItem(`j_td_${esc(n)}_${wi}_${ai}`,val?'1':'0');}catch(e){} }
 function getTodo(n,wi,ai){ try{return localStorage.getItem(`j_td_${esc(n)}_${wi}_${ai}`)==='1';}catch(e){return false;} }
 function getWkTodos(n,wi){ const pl=PLANS[n]; if(!pl)return{d:0,t:0}; const ac=pl.semanas[wi]?.acoes||[]; return{d:ac.filter((_,ai)=>getTodo(n,wi,ai)).length,t:ac.length}; }
@@ -665,6 +705,7 @@ function renderTab(){
   if(curTab==='plano') body.innerHTML = buildPlan(curNome);
   if(curTab==='sim')   body.innerHTML = buildSim(curNome);
   if(curTab==='perf')  body.innerHTML = buildPerf(curNome);
+  if(curTab==='cult')  body.innerHTML = buildCult(curNome);
   if(curTab==='msg')   body.innerHTML = buildMsg(curNome);
 }
 
@@ -920,6 +961,48 @@ function buildPerf(nome){
   }).join('')}</div>`;
 }
 function setRat(nome,k,val){ const p=getProf(nome); p[k]=val; saveProf(nome,p); renderTab(); }
+
+// ── Cultura ──
+function buildCult(nome){
+  const d=getCult(nome);
+  const scores=CULTURA_PILARES.map(p=>({...p, val:d[p.k]||null}));
+  const rated=scores.filter(s=>s.val);
+  const total_score=rated.reduce((s,p)=>{const o=CULT_OPTS.find(x=>x.k===p.val);return s+(o?o.score:0);},0);
+  const max_score=rated.length*3;
+  const pct=max_score>0?Math.round(total_score/max_score*100):0;
+  const pctC=pct>=80?'var(--gnm)':pct>=50?'var(--am)':'var(--rd)';
+
+  const summaryH=rated.length>0?`
+    <div class="cult-summary">
+      <div class="cult-sum-t">Resumo Cultural (${rated.length}/${CULTURA_PILARES.length} avaliados)</div>
+      ${CULT_OPTS.slice().reverse().map(opt=>{
+        const cnt=scores.filter(s=>s.val===opt.k).length;
+        const p=rated.length>0?Math.round(cnt/CULTURA_PILARES.length*100):0;
+        const colors={'na':'#e53935','al':'#fb8c00','ac':'#43a047'};
+        return cnt>0?`<div class="cult-sum-row">
+          <span class="cult-sum-l">${opt.lbl}</span>
+          <div class="cult-sum-bar"><div class="cult-sum-f" style="width:${p}%;background:${colors[opt.k]}"></div></div>
+          <span class="cult-sum-v">${cnt}</span>
+        </div>`:'';
+      }).join('')}
+      <div style="font-size:10px;color:#7fa8d4;margin-top:6px">
+        Score geral: <b style="color:${pctC}">${pct}%</b> (${total_score}/${max_score} pts)
+      </div>
+    </div>`:
+    '<div style="background:var(--g2);border-radius:8px;padding:10px 12px;border:1px solid var(--bdr);font-size:12px;color:#aaa;margin-bottom:12px">Clique nas opções abaixo para avaliar cada pilar cultural.</div>';
+
+  const pilarsH=CULTURA_PILARES.map(p=>{
+    const cur=d[p.k]||null;
+    const opts=CULT_OPTS.map(o=>`<span class="cult-opt ${cur===o.k?o.cls:''}"
+      onclick="setCultRat('${nome}','${p.k}','${o.k}')">${o.lbl}</span>`).join('');
+    return `<div class="cult-item">
+      <div class="cult-pilar">🔷 ${p.lbl}</div>
+      <div class="cult-opts">${opts}</div>
+    </div>`;
+  }).join('');
+
+  return summaryH + '<div class="cult-grid">' + pilarsH + '</div>';
+}
 
 // ── Message ──
 function buildMsg(nome){
