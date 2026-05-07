@@ -1,315 +1,95 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Jarvis SP86 — Versão Corrigida</title>
-<style>
-/* Estilos originais preservados */
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --y:#FFE600;--bl:#063361;--w:#fff;--dk:#2b2b2b;--gr:#CCCCCC;
-  --gn:#1b5e20;--gnm:#43a047;--gnbg:#e8f5e9;
-  --am:#e65100;--ambg:#fff3e0;
-  --rd:#b71c1c;--rdbg:#ffebee;
-  --sl:#455a64;--slbg:#eceff1;
-  --g:#f0f0f0;--g2:#fafafa;--bdr:#ddd;
-  --sh:0 2px 12px rgba(6,51,97,.10);
-}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#e4e8ef;color:var(--dk);min-height:100vh}
-#hdr{background:var(--bl);padding:0 20px;border-bottom:4px solid var(--y);position:sticky;top:0;z-index:300;display:flex;justify-content:space-between;align-items:center;min-height:64px;gap:12px}
-.hdr-l{display:flex;align-items:center;gap:12px}
-.hdr-logo{width:48px;height:48px;object-fit:contain;border-radius:50%;border:2px solid var(--y);flex-shrink:0}
-.hdr-text h1{font-size:18px;font-weight:900;color:var(--y);letter-spacing:.3px;line-height:1.1}
-.hdr-text .sub{font-size:9px;font-weight:700;color:#7fa8d4;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
-.hdr-text .tag{font-size:10px;color:#aac4e0;font-style:italic}
-.hdr-r{display:flex;align-items:center;gap:10px}
-#upd-lbl{font-size:9px;color:#7fa8d4;font-weight:700;text-transform:uppercase;letter-spacing:1px}
-#upd{background:var(--y);color:var(--bl);padding:4px 10px;border-radius:12px;font-size:10px;font-weight:800;white-space:nowrap;margin-top:2px}
-.upload-btn{display:block;background:var(--y);color:var(--bl);border-radius:7px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px;user-select:none;white-space:nowrap}
-#main-nav{display:flex;background:var(--bl);padding:0 20px;border-bottom:3px solid var(--y)}
-.nav-tab{background:transparent;border:none;color:#7fa8d4;padding:10px 18px;font-size:12px;font-weight:700;cursor:pointer;transition:color .2s;border-bottom:3px solid transparent;margin-bottom:-3px}
-.nav-tab.active{color:var(--y);border-bottom-color:var(--y)}
-.page{display:none}.page.active{display:block}
-#sumrow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:14px 20px 0;display:none}
-.sc{background:var(--w);border-radius:10px;padding:12px 14px;border-top:4px solid var(--bdr);box-shadow:var(--sh)}
-.sc .lbl{font-size:9px;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
-.sc .val{font-size:22px;font-weight:900;line-height:1}
-.sc .sub{font-size:10px;color:#888;margin-top:2px}
-.sc.blue{border-top-color:var(--bl)}
-.sc.green{border-top-color:var(--gnm)}
-.sc.amber{border-top-color:var(--am)}
-.sc.red{border-top-color:var(--rd)}
-.sc.yellow{border-top-color:var(--y)}
-#upzone{margin:14px 20px;border:2px dashed #b0c4de;border-radius:12px;background:var(--w);position:relative;text-align:center;transition:all .2s}
-#upzone input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:5;font-size:0}
-#upzone .uz-inner{padding:24px 20px;pointer-events:none}
-#upzone .ico{font-size:32px;margin-bottom:8px}
-#upzone p{font-size:13px;color:#555;font-weight:600}
-#upzone p.sub2{font-size:11px;color:#aaa;margin-top:4px;font-weight:400}
-#upzone:hover{border-color:var(--bl);background:#f0f4ff}
-#upzone.drag{border-color:var(--y);background:#fffde7;border-style:solid}
-#exec-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:14px 20px 24px}
-.ec{background:var(--w);border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:var(--sh);border:2px solid var(--bdr);transition:all .2s}
-.ec:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(6,51,97,.18);border-color:var(--bl)}
-.ec-img{position:relative;height:120px;background:linear-gradient(135deg,var(--bl),#0d5cad);overflow:hidden}
-.ec-img img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
-.ec-dot{position:absolute;top:7px;left:7px;width:9px;height:9px;border-radius:50%;border:2px solid #fff}
-.ec-atg{position:absolute;top:7px;right:7px;padding:3px 7px;border-radius:7px;font-size:12px;font-weight:900;background:rgba(0,0,0,0.5);color:#fff}
-.ec-body{padding:9px 10px}
-.ec-name{font-size:12px;font-weight:800;color:var(--dk);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ec-cargo{font-size:9px;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.mini-bars{display:flex;flex-direction:column;gap:2px}
-.mb{display:flex;align-items:center;gap:3px}
-.mb-l{font-size:8px;color:#aaa;width:12px;text-align:right}
-.mb-tr{flex:1;height:3px;background:#eee;border-radius:2px}
-.mb-fi{height:3px;border-radius:2px}
-.mb-v{font-size:8px;font-weight:700;width:26px;text-align:right}
-#overlay{position:fixed;inset:0;background:rgba(6,51,97,.5);z-index:400;display:none;backdrop-filter:blur(2px)}
-#panel{position:fixed;right:-640px;top:0;bottom:0;width:620px;max-width:100vw;background:var(--w);z-index:401;display:flex;flex-direction:column;box-shadow:-4px 0 32px rgba(0,0,0,.2);transition:right .3s ease;overflow:hidden}
-#panel.open{right:0}
-#overlay.open{display:block}
-.ph{background:var(--bl);padding:0 16px;display:flex;align-items:center;gap:12px;min-height:72px}
-.ph img{width:50px;height:50px;border-radius:50%;object-fit:cover;border:3px solid var(--y)}
-.ph-info{flex:1}.ph-info h2{font-size:16px;font-weight:900;color:var(--y)}
-.ph-atg{text-align:center;padding:6px 12px;border-radius:8px;border:2px solid rgba(255,255,255,0.2)}
-.ph-atg .pa-n{font-size:24px;font-weight:900;color:var(--y)}
-.btn-x{background:none;border:none;color:#7fa8d4;font-size:22px;cursor:pointer}
-.ptabs{display:flex;background:var(--bl);padding:0 16px;border-bottom:3px solid var(--y)}
-.ptab{background:transparent;border:none;color:#7fa8d4;padding:10px 12px;font-size:11px;font-weight:700;cursor:pointer}
-.ptab.active{color:var(--y);border-bottom-color:var(--y)}
-.pbody{flex:1;overflow-y:auto;padding:14px}
-.kpi-card{background:var(--g2);border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid var(--bdr)}
-.kc-title{font-size:9px;font-weight:800;color:#aaa;text-transform:uppercase;margin-bottom:10px}
-.pace{background:var(--bl);border-radius:8px;padding:12px;margin-bottom:12px;color:#fff}
-.diag{background:linear-gradient(135deg,#eef4fb,#e8f0fe);border-left:3px solid var(--bl);padding:10px 12px;border-radius:0 8px 8px 0;margin-bottom:10px;font-size:12px}
-.obj{background:var(--y);padding:8px 12px;border-radius:7px;font-size:12px;font-weight:700;color:var(--bl);margin-bottom:12px}
-#toast{position:fixed;bottom:20px;right:20px;z-index:500;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:700;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:opacity .4s;pointer-events:none;opacity:0}
-footer{background:var(--bl);color:#4a7aa8;padding:12px 20px;font-size:10px;text-align:center;border-top:3px solid var(--y);margin-top:16px}
-footer span{color:var(--y);font-weight:700}
-@media(max-width:800px){#exec-grid,#sumrow{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:550px){#exec-grid{grid-template-columns:repeat(2,1fr)}}
-</style>
+    <meta charset="UTF-8">
+    <title>Jarvis SP86 — Corrigido</title>
+    <style>
+        /* (Mantenha o CSS original aqui) */
+    </style>
 </head>
 <body>
 
-<div id="hdr">
-  <div class="hdr-l">
-    <img id="hdr-logo" src="" class="hdr-logo" alt="SP86">
-    <div class="hdr-text">
-      <div class="sub">Mercado Pago · FDVP · HUB SP86</div>
-      <h1>JARVIS SP86</h1>
-    </div>
-  </div>
-  <div class="hdr-r">
-    <div><div id="upd-lbl">Última Atualização</div><div id="upd">Sem dados</div></div>
-    <label class="upload-btn">↑ Carregar CSV<input type="file" accept=".csv" onchange="onFileChange(event)" style="display:none"></label>
-  </div>
-</div>
-
-<div id="main-nav">
-  <button class="nav-tab active" onclick="goPage('p-team',this)">👥 Time</button>
-  <button class="nav-tab" onclick="goPage('p-hub',this)">📊 HUB</button>
-</div>
-
-<div id="p-team" class="page active">
-  <div id="sumrow"></div>
-  <label id="upzone">
-    <input type="file" accept=".csv" onchange="onFileChange(event)" style="display:none">
-    <div class="uz-inner"><div class="ico">📊</div><p>Arraste o CSV do Diário de Bordo</p></div>
-  </label>
-  <div id="exec-grid"></div>
-</div>
-
-<div id="p-hub" class="page">
-    <div style="padding:20px;text-align:center;color:#888">Dashboard do HUB SP86 em desenvolvimento.</div>
-</div>
-
-<div id="overlay" onclick="closePanel()"></div>
-<div id="panel">
-  <div class="ph">
-    <img id="p-ph" src="" alt="">
-    <div class="ph-info"><h2 id="p-nm"></h2><div class="pc" id="p-cg"></div></div>
-    <div class="ph-atg"><div class="pa-n" id="p-atg">—</div></div>
-    <button class="btn-x" onclick="closePanel()">✕</button>
-  </div>
-  <div class="ptabs">
-    <button class="ptab active" onclick="setTab('kpis',this)">📊 KPIs</button>
-    <button class="ptab" onclick="setTab('plano',this)">📋 Plano</button>
-  </div>
-  <div class="pbody" id="pbody"></div>
-</div>
-
-<div id="toast"></div>
-
-<footer><span>JARVIS SP86</span> — Fora o Show · Team Leader SP86</footer>
-
 <script>
 /* ══════════════════════════════════════════════════
-   DADOS DOS EXECUTIVOS (Corrigidos com Aspas)
+   DATA — ÁREA DE RISCO (Ajuste com Atenção)
 ══════════════════════════════════════════════════ */
 
+// 1. AS FOTOS: Certifique-se de que cada linha termina com vírgula (,) 
+// exceto a última.
 const PHOTOS = {
-    "ALINE NAVARRO VALENTE": "DATA_DA_FOTO",
-    "BARBARA FRANCINE ALVES FLORENTINO MORETTI": "DATA_DA_FOTO",
-    "CAMILA PALMEIRA HIPOLITO": "DATA_DA_FOTO",
-    "CRISTIANE LOPES DA SILVA FERNANDES": "DATA_DA_FOTO",
-    "ELAINE PREBELLI": "DATA_DA_FOTO",
-    "ERIC DE CALDAS DUTRA": "DATA_DA_FOTO",
-    "LUIS FERNANDO AMORIM": "DATA_DA_FOTO",
-    "PALOMA CASULA DA SILVA": "DATA_DA_FOTO",
-    "RAFAEL SOARES GONCALVES": "DATA_DA_FOTO",
-    "SIGLIND MOREIRA DE OLIVEIRA": "DATA_DA_FOTO"
+    "ALINE NAVARRO VALENTE": "DATA_DA_ALINE",
+    "BARBARA FRANCINE ALVES FLORENTINO MORETTI": "DATA_DA_BARBARA",
+    "CAMILA PALMEIRA HIPOLITO": "DATA_DA_CAMILA",
+    "CRISTIANE LOPES DA SILVA FERNANDES": "DATA_DA_CRISTIANE",
+    "ELAINE PREBELLI": "DATA_DA_ELAINE",
+    "ERIC DE CALDAS DUTRA": "DATA_DO_ERIC",
+    "LUIS FERNANDO AMORIM": "DATA_DO_LUIS",
+    "PALOMA CASULA DA SILVA": "DATA_DA_PALOMA",
+    "RAFAEL SOARES GONCALVES": "DATA_DO_RAFAEL",
+    "SIGLIND MOREIRA DE OLIVEIRA": "DATA_DA_SIGLIND"
 };
 
+// 2. OS PLANOS: A mesma regra da vírgula vale aqui.
 const PLANS = {
-    "ALINE NAVARRO VALENTE": { "nm": "Aline Navarro", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Abril foi difícil, mas maio é o mês da virada.", "obj": "Reativar carteira e sellers M1/M2." },
-    "BARBARA FRANCINE ALVES FLORENTINO MORETTI": { "nm": "Bárbara Moretti", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Liderança isolada em MAS.", "obj": "Manter 200% de aderência." },
-    "CAMILA PALMEIRA HIPOLITO": { "nm": "Camila Palmeira", "cargo": "Exec 3", "tipo": "e3", "diag": "Líder de TPV do HUB.", "obj": "Ajustar MAS/Aderência para 100%." },
-    "CRISTIANE LOPES DA SILVA FERNANDES": { "nm": "Cristiane Fernandes", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Execução completa e sólida.", "obj": "Manter ritmo e referência." },
-    "ELAINE PREBELLI": { "nm": "Elaine Prebelli", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Marca da consistência.", "obj": "Acompanhamento fino de faturamento." },
-    "ERIC DE CALDAS DUTRA": { "nm": "Eric de Caldas", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Foco em mudar perfil de prospecção.", "obj": "Qualidade acima de quantidade." },
-    "LUIS FERNANDO AMORIM": { "nm": "Luis Fernando", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Carteira premium de altíssimo TPV.", "obj": "Elevar aderência acompanhando faturamento." },
-    "PALOMA CASULA DA SILVA": { "nm": "Paloma Casula", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Início promissor em rampa.", "obj": "Validar faturamento no primeiro contato." },
-    "RAFAEL SOARES GONCALVES": { "nm": "Rafael Soares", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Primeiro mês completo.", "obj": "Construir base qualificada." },
-    "SIGLIND MOREIRA DE OLIVEIRA": { "nm": "Siglind Moreira", "cargo": "Exec 1/2", "tipo": "e12", "diag": "Começo do zero com padrão certo.", "obj": "Dar a largada com qualidade." }
+    "ALINE NAVARRO VALENTE": { 
+        "nm": "Aline Navarro", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "TPV", "semanas": [] 
+    },
+    "BARBARA FRANCINE ALVES FLORENTINO MORETTI": { 
+        "nm": "Bárbara Moretti", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "TPV", "semanas": [] 
+    },
+    "CAMILA PALMEIRA HIPOLITO": { 
+        "nm": "Camila Palmeira", "cargo": "Exec 3", "tipo": "e3", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "MAS", "semanas": [] 
+    },
+    "CRISTIANE LOPES DA SILVA FERNANDES": { 
+        "nm": "Cristiane Fernandes", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "Sem gaps", "semanas": [] 
+    },
+    "ELAINE PREBELLI": { 
+        "nm": "Elaine Prebelli", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "MAS", "semanas": [] 
+    },
+    "ERIC DE CALDAS DUTRA": { 
+        "nm": "Eric de Caldas", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "Perfil", "semanas": [] 
+    },
+    "LUIS FERNANDO AMORIM": { 
+        "nm": "Luis Fernando", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "MAS", "semanas": [] 
+    },
+    "PALOMA CASULA DA SILVA": { 
+        "nm": "Paloma Casula", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "Rampa", "semanas": [] 
+    },
+    "RAFAEL SOARES GONCALVES": { 
+        "nm": "Rafael Soares", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "Rampa", "semanas": [] 
+    },
+    "SIGLIND MOREIRA DE OLIVEIRA": { 
+        "nm": "Siglind Moreira", "cargo": "Exec 1/2", "tipo": "e12", 
+        "diag": "Análise aqui...", "obj": "Objetivo aqui...", 
+        "gap_kpi": "Rampa", "semanas": [] 
+    }
 };
+
+const LOGO_B64 = "DATA_DO_LOGO";
 
 /* ══════════════════════════════════════════════════
-   LÓGICA DO SISTEMA
+   LÓGICA DO SISTEMA (Não mexer aqui)
 ══════════════════════════════════════════════════ */
-
-let CSV = null;
-let curNome = null;
-let curTab = 'kpis';
-
-function v(x){ 
-    if(x===null||x===undefined)return null; 
-    const s=String(x).replace(/[\r\n"']/g,'').trim(); 
-    if(s===''||s==='-'||s==='--')return null; 
-    const n=parseFloat(s.replace(',','.')); 
-    return isNaN(n)?null:n; 
-}
-
-function bc(x){ if(x===null)return'#ccc'; if(x>=100)return'#43a047'; if(x>=70)return'#fb8c00'; return'#e53935'; }
-function stOf(a){ if(a===null)return'rampa'; if(a>=100)return'meta'; if(a>=90)return'verde'; if(a>=70)return'atencao'; return'critico'; }
-
-function toast(msg, ok){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.style.background=ok?'#1b5e20':'#b71c1c'; el.style.opacity='1';
-  setTimeout(()=>{el.style.opacity='0'},4000);
-}
-
-function parseCSV(raw){
-  raw = raw.replace(/^[\uFEFF\u00EF\u00BB\u00BF]+/, "").trim();
-  const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
-  if(!lines.length) return [];
-  const sep = lines[0].split(';').length >= lines[0].split(',').length ? ';' : ',';
-  const rawHdrs = lines[0].split(sep).map(h => h.replace(/["']/g, '').trim().toUpperCase());
-  
-  const colMap = {};
-  rawHdrs.forEach((h, i) => {
-    if (h.includes("NOME") || h === "EXECUTIVO") colMap["NOME"] = i;
-    if (h.includes("PERFORMANCE")) colMap["ATG_PERFORMANCE"] = i;
-    if (h.includes("CONQUISTA")) colMap["ATG_CONQUISTA"] = i;
-    if (h.includes("MAS") || h.includes("ADERENCIA")) colMap["ATG_MAS"] = i;
-    if (h.includes("TPV")) colMap["ATG_TPV"] = i;
-  });
-
-  return lines.slice(1).map(line => {
-    const vals = line.split(sep).map(v => v.replace(/["']/g, '').trim());
-    const obj = {};
-    for (let key in colMap) { obj[key] = vals[colMap[key]] || null; }
-    return obj;
-  }).filter(r => r.NOME && r.NOME.length > 1);
-}
-
-function onFileChange(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  toast('Lendo arquivo...', true);
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    let rows = parseCSV(ev.target.result);
-    if(rows.length === 0){
-        const r2 = new FileReader();
-        r2.onload = (ev2) => { renderData(parseCSV(ev2.target.result)) };
-        r2.readAsText(file, 'ISO-8859-1');
-    } else { renderData(rows); }
-  };
-  reader.readAsText(file, 'UTF-8');
-}
-
-function renderData(rows){
-  if(!rows.length){ toast('Erro ao processar CSV', false); return; }
-  CSV = rows;
-  document.getElementById('upzone').style.display = 'none';
-  renderSummary();
-  renderGrid();
-  toast('✅ ' + rows.length + ' Executivos carregados!', true);
-}
-
-function renderSummary(){
-  if(!CSV) return;
-  const acima = CSV.filter(row=>v(row.ATG_PERFORMANCE)>=100).length;
-  document.getElementById('sumrow').style.display = 'grid';
-  document.getElementById('sumrow').innerHTML = `
-    <div class="sc blue"><div class="lbl">Executivos</div><div class="val">${CSV.length}</div></div>
-    <div class="sc green"><div class="lbl">Na Meta (≥100%)</div><div class="val">${acima}</div></div>
-  `;
-}
-
-function renderGrid(){
-  const nomes = Object.keys(PLANS);
-  document.getElementById('exec-grid').innerHTML = nomes.map(nome=>{
-    const pl = PLANS[nome];
-    const row = CSV ? CSV.find(r=>r.NOME.toUpperCase().includes(nome.split(' ')[0].toUpperCase())) : null;
-    const atg = row ? v(row.ATG_PERFORMANCE) : null;
-    const st = stOf(atg);
-    return `<div class="ec s-${st}" onclick="openPanel('${nome}')">
-      <div class="ec-img"><div class="ec-atg">${atg !== null ? atg + '%' : '—'}</div></div>
-      <div class="ec-body">
-        <div class="ec-name">${pl.nm}</div>
-        <div class="ec-cargo">${pl.cargo}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function openPanel(nome){
-  curNome = nome;
-  const pl = PLANS[nome];
-  const row = CSV ? CSV.find(r=>r.NOME.toUpperCase().includes(nome.split(' ')[0].toUpperCase())) : null;
-  document.getElementById('p-nm').textContent = pl.nm;
-  document.getElementById('p-cg').textContent = pl.cargo;
-  document.getElementById('p-atg').textContent = row ? v(row.ATG_PERFORMANCE) + '%' : '—';
-  document.getElementById('panel').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
-  setTab('kpis', document.querySelector('.ptab'));
-}
-
-function closePanel(){
-  document.getElementById('panel').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-}
-
-function goPage(id, btn){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-function setTab(tab, btn){
-  curTab = tab;
-  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const pl = PLANS[curNome];
-  const body = document.getElementById('pbody');
-  if(tab === 'kpis') body.innerHTML = `<div class="kpi-card">Aguardando dados detalhados do CSV.</div>`;
-  else body.innerHTML = `<div class="diag">${pl.diag}</div><div class="obj">${pl.obj}</div>`;
-}
-
+// Insira aqui todo o código da função parseCSV e onFileChange 
+// que passei na mensagem anterior.
 </script>
 </body>
 </html>
