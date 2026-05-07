@@ -1062,11 +1062,15 @@ function renderHub(){
   const wk=curWeek();
   const HT={tpv:5813860,mas:124,conq:102,pricing:223778};
   const tpvR=CSV?CSV.reduce((s,r)=>s+(v(r.TPV_TOTAL)||0),0):0;
-  const masR=CSV?CSV.reduce((s,r)=>s+(v(r.TOTAL_MAS)||0),0):0;
+  const masR=CSV?CSV.reduce((s,r)=>s+(v(r.TOTAL_MAS_POND)||0),0):0;
   const conqR=CSV?CSV.reduce((s,r)=>s+(v(r.QTD_CONQUISTA)||0),0):0;
   const acima=CSV?CSV.filter(r=>v(r.ATG_PERFORMANCE)>=100).length:0;
   const gestao=CSV?Math.round((acima/CSV.length)*40):0;
-  const hp=(l,pct,real,meta,unit)=>{const c=bc(pct);return`<div class="hprog-r"><span class="hprog-l">${l}</span><div class="hprog-b"><div class="hprog-f" style="width:${Math.min(pct,100)}%;background:${c}"></div></div><span class="hprog-p" style="color:${c}">${pct}%</span><span class="hprog-m">${unit||''}${(real/1000).toFixed(0)}k / ${unit||''}${(meta/1000).toFixed(0)}k</span></div>`;};
+  const hp=(l,pct,real,meta,unit)=>{
+  const c=bc(pct);
+  const fmt=(n,u)=>u?u+(n>=1000?(n/1000).toFixed(0)+'k':Math.round(n)):(n>=1000?(n/1000).toFixed(0)+'k':Math.round(n));
+  return`<div class="hprog-r"><span class="hprog-l">${l}</span><div class="hprog-b"><div class="hprog-f" style="width:${Math.min(pct,100)}%;background:${c}"></div></div><span class="hprog-p" style="color:${c}">${pct}%</span><span class="hprog-m">${fmt(real,unit)} / ${fmt(meta,unit)}</span></div>`;
+};
   const wkInfo=[
     {s:'S1',d:'05–09/Mai',f:'Diagnóstico Inicial',dir:'Mapear gaps. Definir rota de cada exec. Check-in presencial. Primeiro upload.',t:'largada'},
     {s:'S2',d:'12–16/Mai',f:'Construção de Base',dir:'Revisar conquistas da S1. Verificar faturamento dos sellers de M0. Push de onboarding.',t:'execução'},
