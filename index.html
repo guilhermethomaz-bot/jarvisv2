@@ -412,8 +412,28 @@ const PROFILE_CATS=[{"k": "comunicacao", "lbl": "Comunicação", "ico": "💬"},
 
 </script>
 <script>
+ Parsing de CSV
+Logotipo da empresa
+Conversa com o Gemini
+Identifique o erro que está fazendo com que eu não consiga fazer upload no arquivo e corrija.
+
+O erro principal que está impedindo o upload e o processamento dos dados no seu código atual está na extrema rigidez do rastreador de colunas e no tratamento de codificação (encoding).
+
+Os Erros Identificados:
+Sensibilidade a Maiúsculas/Minúsculas: O seu código procura exatamente pela coluna NOME. Se o CSV gerado pelo sistema vier como Nome, nome ou NOME EXECUTIVO, o filtro rows.filter(r => r.NOME...) retorna vazio, e o Jarvis exibe a mensagem de "dados não reconhecidos".
+
+Codificação (Encoding): Arquivos CSV exportados de ferramentas como Excel no Brasil geralmente usam a codificação ISO-8859-1 (ou Windows-1252). Ao ler como UTF-8 fixo, caracteres com acentos (como "Bárbara") ou cabeçalhos com caracteres especiais podem ser corrompidos, impedindo o Jarvis de encontrar as colunas.
+
+Caracteres Invisíveis (BOM): Muitas vezes o Excel adiciona um caractere invisível no início do arquivo que o seu código tentava remover, mas de forma parcial.
+
+A Solução:
+Abaixo está o código corrigido. Foquei em tornar a função parseCSV e onFileChange muito mais "inteligentes" e resilientes.
+
+Substitua toda a sua seção <script> final (do CORE LOGIC em diante) por esta versão atualizada:
+
+JavaScript
 /* ══════════════════════════════════════════════════
-   CORE LOGIC
+   CORE LOGIC — VERSÃO CORRIGIDA
 ══════════════════════════════════════════════════ */
 
 // ── State ──
@@ -426,113 +446,111 @@ let qOpen = false;
 let histOpen = false;
 
 // ── Helpers ──
-function v(x){ if(x===null||x===undefined)return null; const s=String(x).replace(/[\r\n]/g,'').trim(); if(s===''||s==='-'||s==='--')return null; const n=parseFloat(s); return isNaN(n)?null:n; }
+function v(x){ if(x===null||x===undefined)return null; const s=String(x).replace(/[\r\n"']/g,'').trim(); if(s===''||s==='-'||s==='--')return null; const n=parseFloat(s.replace(',','.')); return isNaN(n)?null:n; }
 function p(x){ const n=v(x); return n===null?'—':n+'%'; }
 function fK(x){ const n=v(x); if(n===null)return'—'; if(n>=1e6)return'R$'+(n/1e6).toFixed(1)+'M'; if(n>=1000)return'R$'+(n/1000).toFixed(0)+'k'; return'R$'+n; }
-function esc(s){ return s.replace(/[^a-zA-Z0-9]/g,'_'); }
+function esc(s){ return s ? s.replace(/[^a-zA-Z0-9]/g,'_') : 'unknown'; }
 function bc(x){ if(x===null)return'#ccc'; if(x>=100)return'#43a047'; if(x>=70)return'#fb8c00'; return'#e53935'; }
 function stOf(a){ if(a===null)return'rampa'; if(a>=100)return'meta'; if(a>=90)return'verde'; if(a>=70)return'atencao'; return'critico'; }
-function stLbl(s){ return{meta:'✅ Meta Batida',verde:'🟢 Em Dia',atencao:'🟡 Atenção',critico:'🔴 Crítico',rampa:'⚫ Rampa'}[s]||s; }
-function stDot(s){ return{meta:'#1b5e20',verde:'#43a047',atencao:'#fb8c00',critico:'#e53935',rampa:'#607d8b',rampa:'#607d8b'}[s]||'#aaa'; }
 function pesos(tipo){ return tipo==='e3'?{c:0,m:30,t:45,p:25}:{c:10,m:30,t:35,p:25}; }
+function stDot(s){ return{meta:'#1b5e20',verde:'#43a047',atencao:'#fb8c00',critico:'#e53935',rampa:'#607d8b'}[s]||'#aaa'; }
+
 function toast(msg, ok){
   const el=document.getElementById('toast');
   el.textContent=msg; el.style.background=ok?'#1b5e20':'#b71c1c'; el.style.color='#fff'; el.style.opacity='1';
-  clearTimeout(el._t); el._t=setTimeout(()=>{el.style.opacity='0';},4500);
+  el.style.pointerEvents = 'auto';
+  clearTimeout(el._t); el._t=setTimeout(()=>{el.style.opacity='0'; el.style.pointerEvents='none';},4500);
 }
 
-// ── Calendar ──
-function bizDays(year){
-  const d=new Date(year,4,1); const res=[];
-  while(d.getMonth()===4){ const dw=d.getDay(); if(dw>0&&dw<6&&!(d.getDate()===1)){res.push(new Date(d));} d.setDate(d.getDate()+1); }
-  return res;
-}
-function elapsed(){
-  const today=new Date(); const yr=today.getFullYear(); const m=today.getMonth()+1;
-  if(m!==5) return {e:0,r:20,tot:20,pct:0,yr};
-  const bd=bizDays(yr); const e=bd.filter(d=>d<=today).length; const tot=bd.length;
-  return{e,r:Math.max(0,tot-e),tot,pct:Math.round(e/tot*100),yr};
-}
-function curWeek(){
-  const d=new Date(); const m=d.getMonth()+1,day=d.getDate();
-  if(m!==5)return 1;
-  if(day>=26)return 4; if(day>=19)return 3; if(day>=12)return 2; return 1;
-}
-function todayStr(){ return new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
-
-// ── localStorage ──
-function saveTodo(n,wi,ai,val){ try{localStorage.setItem(`j_td_${esc(n)}_${wi}_${ai}`,val?'1':'0');}catch(e){} }
-function getTodo(n,wi,ai){ try{return localStorage.getItem(`j_td_${esc(n)}_${wi}_${ai}`)==='1';}catch(e){return false;} }
-function getWkTodos(n,wi){ const pl=PLANS[n]; if(!pl)return{d:0,t:0}; const ac=pl.semanas[wi]?.acoes||[]; return{d:ac.filter((_,ai)=>getTodo(n,wi,ai)).length,t:ac.length}; }
-function getProf(n){ try{return JSON.parse(localStorage.getItem(`j_prf_${esc(n)}`)||'{}');}catch(e){return{};} }
-function saveProf(n,d){ try{localStorage.setItem(`j_prf_${esc(n)}`,JSON.stringify(d));}catch(e){} }
-function saveHist(rows){
-  try{
-    const k='j_hist'; let h=[]; try{h=JSON.parse(localStorage.getItem(k)||'[]');}catch(e){}
-    const now=new Date(); const dk=now.toLocaleDateString('pt-BR');
-    const entry={date:dk,ts:now.getTime(),hub:0,ex:{}};
-    rows.forEach(r=>{entry.ex[r.NOME]={atg:v(r.ATG_PERFORMANCE),c:v(r.ATG_CONQUISTA),m:v(r.ATG_MAS),t:v(r.ATG_TPV),pr:v(r.ATG_PRI_FINAL)};});
-    const atgs=rows.map(r=>v(r.ATG_PERFORMANCE)).filter(x=>x!==null);
-    entry.hub=atgs.length?Math.round(atgs.reduce((a,b)=>a+b,0)/atgs.length):0;
-    const ex=h.findIndex(x=>x.date===dk);
-    if(ex>=0)h[ex]=entry; else h.push(entry);
-    h.sort((a,b)=>a.ts-b.ts); if(h.length>30)h=h.slice(-30);
-    localStorage.setItem(k,JSON.stringify(h));
-  }catch(e){}
-}
-function loadHist(){ try{return JSON.parse(localStorage.getItem('j_hist')||'[]');}catch(e){return[];} }
-
-// ── CSV Parser ──
+// ── CSV Parser Evoluído ──
 function parseCSV(raw){
-  // Strip BOM
-  if(raw.charCodeAt(0)===0xFEFF) raw=raw.slice(1);
-  // Normalize all line endings and strip carriage returns
-  raw=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
-  const lines=raw.split('\n').filter(l=>l.trim());
+  // Limpeza de caracteres de controle e BOM
+  raw = raw.replace(/^[\uFEFF\u00EF\u00BB\u00BF\u00EF\u00BF\u00BD]+/, "").trim();
+  const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
   if(!lines.length) return [];
-  // Auto-detect separator
-  const sep=lines[0].split(';').length>lines[0].split(',').length?';':',';
-  // Parse headers - strip BOM, quotes, spaces, carriage returns
-  const hdrs=lines[0].split(sep).map(h=>h.replace(/[\r\n"']/g,'').trim());
-  const rows=lines.slice(1).map(line=>{
-    // Simple split (CSV from this system has no quoted commas)
-    const vals=line.split(sep);
-    const o={};
-    hdrs.forEach((h,i)=>{
-      const raw_val=(vals[i]||'');
-      // Strip ALL whitespace, quotes, carriage returns
-      o[h]=raw_val.replace(/[\r\n"']/g,'').trim();
-    });
-    return o;
+
+  // Detector de separador (ponto e vírgula é o padrão BR)
+  const sep = lines[0].split(';').length >= lines[0].split(',').length ? ';' : ',';
+  
+  // Normalização de cabeçalhos (remove espaços, aspas e joga pra maiúsculo)
+  const rawHdrs = lines[0].split(sep).map(h => h.replace(/["']/g, '').trim().toUpperCase());
+  
+  // Mapeamento inteligente de colunas críticas
+  const colMap = {};
+  rawHdrs.forEach((h, i) => {
+    if (h.includes("NOME") || h === "EXECUTIVO") colMap["NOME"] = i;
+    if (h.includes("PERFORMANCE")) colMap["ATG_PERFORMANCE"] = i;
+    if (h.includes("CONQUISTA")) colMap["ATG_CONQUISTA"] = i;
+    if (h.includes("MAS") || h.includes("ADERENCIA")) colMap["ATG_MAS"] = i;
+    if (h.includes("TPV")) colMap["ATG_TPV"] = i;
+    if (h.includes("PRI") || h.includes("FINAL")) colMap["ATG_PRI_FINAL"] = i;
+    // Adicione outros mapeamentos conforme necessário baseado nas chaves do seu PLANS
+    colMap[h] = i; 
   });
-  const valid=rows.filter(r=>r.NOME&&r.NOME.trim().length>0);
-  console.log('CSV parsed:',valid.length,'rows. Headers:',hdrs.slice(0,5),'... ATG_PERF col:',hdrs.indexOf('ATG_PERFORMANCE'));
-  return valid;
+
+  const rows = lines.slice(1).map(line => {
+    const vals = line.split(sep).map(v => v.replace(/["']/g, '').trim());
+    const obj = {};
+    // Garantir que campos básicos existam mesmo que o nome da coluna mude
+    for (let key in colMap) {
+      obj[key] = vals[colMap[key]] || null;
+    }
+    // Caso a coluna NOME venha com outro nome, mapeamos para a chave que o código espera
+    return obj;
+  });
+
+  return rows.filter(r => r.NOME && r.NOME.length > 1);
 }
 
-// ── File Upload ──
+// ── File Upload Corrigido ──
 function onFileChange(e){
-  const files = e.target.files;
-  if(!files||!files.length){ toast('Clique no botão e selecione um arquivo CSV.', false); return; }
-  const file = files[0];
-  // Reset input so same file can be re-uploaded
-  try{ e.target.value=''; }catch(ex){}
-  toast('Carregando '+file.name+'...', true);
+  const file = e.target.files[0];
+  if(!file) return;
+
+  toast('Lendo arquivo...', true);
+
+  // Tentamos ler primeiro em ISO-8859-1 (Padrão Excel BR)
+  // Se falhar ou vier estranho, o UTF-8 resolve a maioria
   const reader = new FileReader();
-  reader.onerror = function(err){
-    toast('Erro ao ler o arquivo: '+file.name, false);
-    console.error('FileReader error:', err);
+  reader.onload = (ev) => {
+    let content = ev.target.result;
+    let rows = parseCSV(content);
+
+    // Se não encontrou nomes, tenta ler com outra codificação
+    if (rows.length === 0) {
+        const readerAlt = new FileReader();
+        readerAlt.onload = (ev2) => {
+            rows = parseCSV(ev2.target.result);
+            processData(rows, ev2.target.result);
+        };
+        readerAlt.readAsText(file, 'ISO-8859-1');
+    } else {
+        processData(rows, content);
+    }
   };
-  reader.onload = function(ev){
-    try{
-      const raw = ev.target.result;
-      console.log('File loaded, size:', raw.length, 'first 100 chars:', raw.substring(0,100));
-      const rows = parseCSV(raw);
-      console.log('Parsed rows:', rows.length);
-      if(!rows.length){
-        toast('CSV sem dados reconhecidos. Verifique o arquivo.', false);
+  reader.readAsText(file, 'UTF-8');
+}
+
+function processData(rows, rawContent) {
+    if(!rows.length){
+        toast('CSV sem dados compatíveis. Verifique as colunas.', false);
         return;
-      }
+    }
+
+    CSV = rows;
+    simS = {};
+    saveHist(rows);
+    try { localStorage.setItem('j_csv', rawContent); } catch(e){}
+    
+    const now = new Date();
+    document.getElementById('upd').textContent = now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('upzone').style.display = 'none';
+    
+    renderSummary();
+    renderGrid();
+    toast('✅ ' + rows.length + ' Executivos carregados!', true);
+}
+
       // Check if ATG_PERFORMANCE exists
       const hasCols = rows[0].hasOwnProperty('ATG_PERFORMANCE');
       console.log('Has ATG_PERFORMANCE:', hasCols, '| Keys:', Object.keys(rows[0]).slice(0,5));
