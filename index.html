@@ -200,6 +200,40 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .prof-n{font-size:9px;color:#aaa;margin-top:3px;font-style:italic}
 
 /* Message */
+
+/* ── Analysis panel ── */
+#analysis-panel{margin:0 20px 20px;background:#fff;border-radius:12px;border:2px solid var(--bdr);overflow:hidden;box-shadow:var(--sh)}
+.ap-body{padding:18px}
+.ap-msg{background:var(--bl);border-radius:12px;
+  padding:16px 20px;margin-bottom:14px;font-size:13px;
+  color:#cce0f7;line-height:1.8}
+.ap-msg b{color:var(--y);font-style:normal}
+.ap-section{margin-bottom:18px}
+.ap-section h3{font-size:11px;font-weight:800;color:var(--bl);text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:6px;
+  padding-bottom:6px;border-bottom:2px solid var(--y)}
+/* KPI table */
+.kpi-rank-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.kpi-rank-tbl th{background:#f5f5f5;padding:7px 10px;text-align:left;font-size:9px;
+  font-weight:800;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--bdr)}
+.kpi-rank-tbl td{padding:7px 10px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+.kpi-rank-tbl tr:last-child td{border-bottom:none}
+.rank-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:800}
+.rb-best{background:var(--gnbg);color:var(--gn)}
+.rb-worst{background:var(--rdbg);color:var(--rd)}
+/* Value prop cards */
+.vp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.vp-card{background:var(--g2);border-radius:9px;padding:11px 13px;border:1px solid var(--bdr);border-left:3px solid}
+.vp-card h4{font-size:12px;font-weight:800;color:var(--dk);margin-bottom:2px}
+.vp-cargo{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#aaa;margin-bottom:7px}
+.vp-atg{font-size:11px;font-weight:800;margin-bottom:7px}
+.vp-offer{font-size:11px;color:#555;line-height:1.5;margin-bottom:6px}
+.vp-tag{display:inline-block;background:#eef4ff;color:var(--bl);padding:2px 7px;
+  border-radius:3px;font-size:9px;font-weight:700;margin:2px 2px 0 0}
+/* Profile tips */
+.prof-tip{background:#f0f4ff;border-radius:7px;padding:8px 10px;margin-top:6px;
+  font-size:11px;color:var(--bl);line-height:1.5;border-left:3px solid var(--bl)}
+.prof-tip b{color:var(--bl)}
 .cult-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
 .cult-item{background:var(--g2);border-radius:10px;padding:12px 14px;border:1px solid var(--bdr)}
 .cult-pilar{font-size:12px;font-weight:800;color:var(--bl);margin-bottom:8px;line-height:1.4}
@@ -343,6 +377,12 @@ footer span{color:var(--y);font-weight:700}
     </div>
   </label>
   <div id="exec-grid"></div>
+  <div id="exec-grid"></div>
+
+
+  <div id="analysis-panel" style="display:none;margin:0 20px 16px">
+    <div id="ap-body"></div>
+  </div>
 </div>
 
 <!-- PAGE: HUB -->
@@ -476,6 +516,72 @@ function curWeek(){
 }
 function todayStr(){ return new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
 
+
+const PROF_TIPS = {
+  comunicacao:{
+    na:"Pratique comunicação objetiva: antes de cada visita, defina 1 mensagem principal. Depois, faça um check com o TL para garantir alinhamento. Use perguntas abertas com o cliente para entender antes de propor.",
+    al:"Você já se comunica bem. Evolua para comunicação de impacto: adapte o pitch ao perfil de cada seller (dono de loja ≠ gerente de rede). Registre feedbacks dos clientes para refinar sua abordagem.",
+    ac:"Referência em comunicação. Use esse talento para mentorear o time: compartilhe roteiros de abordagem, conduza roleplays com colegas em desenvolvimento e contribua no check-in com exemplos práticos."
+  },
+  equipe:{
+    na:"Inicie pequeno: ofereça ajuda pontual a um colega esta semana. Compartilhe 1 aprendizado no check-in. Trabalho em equipe se constrói com pequenas ações diárias, não só em grandes momentos.",
+    al:"Você colabora bem. Dê o próximo passo: assuma um papel ativo no alinhamento do time — sugira soluções, não só problemas. Apoie um colega em dificuldade com uma ida a campo conjunta.",
+    ac:"Seu espírito de equipe é referência. Formalize isso: conduza ao menos 1 mentoria mensal com um executivo em desenvolvimento e traga pautas de melhoria coletiva para as reuniões com o TL."
+  },
+  engajamento:{
+    na:"Reconecte-se com seu propósito: o que te motivou a entrar nessa área? Defina 1 meta pessoal desafiadora para o mês (ex: bater X% do ATG). Compartilhe com o TL para criar compromisso mútuo.",
+    al:"Engajamento sólido. Para subir de nível: busque entender como seu resultado impacta o time e o HUB. Quando você vê o propósito coletivo, o engajamento individual cresce naturalmente.",
+    ac:"Energia contagiante — use isso conscientemente. Seja o termômetro positivo do time nos dias difíceis. Iniciativas voluntárias (trazer uma dica nova, celebrar conquistas do time) reforçam esse papel."
+  },
+  emocional:{
+    na:"Em momentos de pressão, use a técnica dos 3 passos: pare, respire, pergunte 'qual é o próximo passo concreto?'. Foco em ação reduz ansiedade. Converse com o TL quando sentir que a pressão está alta.",
+    al:"Boa estabilidade emocional. Para avançar: desenvolva resiliência proativa — antecipe situações difíceis (cliente difícil, meta atrasada) e prepare respostas antes que aconteçam.",
+    ac:"Inteligência emocional elevada. Use isso para ajudar colegas em situações de pressão — uma conversa no momento certo faz diferença. Considere compartilhar técnicas de gestão emocional no check-in."
+  },
+  organizacao:{
+    na:"Comece com uma rotina simples: na segunda de manhã, liste as 3 prioridades da semana. Na sexta, avalie o que foi feito. Use o FAST religiosamente — o que não é registrado não é gerenciado.",
+    al:"Boa organização. Evolua para planejamento com antecedência: prepare a rota da semana seguinte na quinta-feira. Isso reduz tempo perdido e aumenta visitas qualificadas por dia.",
+    ac:"Organização exemplar. Compartilhe seu método de planejamento de rota com o time — como você prioriza sellers, como organiza os dias, quais ferramentas usa. Isso multiplica resultado para todos."
+  },
+  negociacao:{
+    na:"Foque no fundamento: entenda o negócio do seller antes de propor qualquer coisa. Pergunte sobre faturamento, desafios, concorrência. Quem mais escuta, mais vende. Faça 2 visitas esta semana só para ouvir.",
+    al:"Você negocia bem. Para avançar: trabalhe o 'não' — quando o cliente recusa, explore o motivo com curiosidade, não defensividade. Cada objeção é uma informação valiosa para refinar a proposta.",
+    ac:"Persuasão de alto nível. Documente seus melhores argumentos e casos de sucesso — o time pode aprender com sua abordagem. Considere liderar uma prática de roleplay mensal com foco em objeções."
+  }
+};
+
+const CULT_TIPS = {
+  valor:{
+    na:"Foque em entender o impacto do seu trabalho no seller: cada cliente conquistado é um pequeno negócio que cresce com o MP. Pergunte-se: 'o que eu fiz hoje que gerou valor real para o cliente?'",
+    al:"Você já cria valor. Evolua para criar valor percebido: comunique ao seller como o MP está ajudando o negócio dele com dados (volume processado, parcelamentos, crédito). Valor que o cliente sente fideliza.",
+    ac:"Referência em criação de valor. Compartilhe casos de sucesso com o time — sellers que cresceram com o MP são a melhor prova do propósito da operação."
+  },
+  risco:{
+    na:"Empreender com risco não é ser imprudente — é ter coragem de tentar abordagens novas. Esta semana, experimente um setor diferente ou um pitch que nunca usou. O pior resultado é aprendizado.",
+    al:"Você assume riscos de forma consistente. Para evoluir: proponha ao TL uma iniciativa nova (novo segmento, nova abordagem) e leve a proposta estruturada com hipótese e plano de validação.",
+    ac:"Mentalidade empreendedora forte. Inspire o time a testar novas abordagens — compartilhe seus experimentos (o que tentou, o que funcionou, o que não funcionou) no check-in semanal."
+  },
+  execucao:{
+    na:"Excelência começa na preparação: antes de cada visita, pesquise o CNPJ do seller, entenda o setor, prepare 2 argumentos personalizados. Execução excelente não é improviso — é preparação.",
+    al:"Boa execução. Para chegar à excelência: revise seus números toda semana com olhar crítico. O que poderia ter feito diferente? Uma análise honesta semanal acelera a melhora.",
+    ac:"Execução de alto nível — isso gera confiança no cliente e no time. Documente seu processo (como prepara a visita, como aborda, como faz follow-up) para que sirva de referência."
+  },
+  beta:{
+    na:"Beta contínuo significa aprender rápido. Escolha 1 coisa que não está funcionando na sua abordagem e teste uma mudança esta semana. Registre o resultado. Iterar é mais poderoso que planejar demais.",
+    al:"Você já itera bem. Avance para um ciclo mais rápido: após cada visita de cliente, registre 1 aprendizado. Em 30 dias você terá um banco de insights que vai transformar sua abordagem.",
+    ac:"Mentalidade de melhoria contínua consolidada. Proponha ao TL um momento de troca de aprendizados no time — uma sessão mensal de 'o que testamos e aprendemos' acelera todos."
+  },
+  equipe:{
+    na:"Competir em equipe começa com pequenas ações: celebre a conquista de um colega hoje. Quando o time cresce junto, você também cresce. O ATG do HUB impacta o seu bônus diretamente.",
+    al:"Espírito de equipe presente. Para fortalecer: nas próximas semanas, identifique 1 colega que está com dificuldade e ofereça ajuda concreta (uma ida a campo, um compartilhamento de rota).",
+    ac:"Competidor de equipe exemplar. Formalize seu papel de referência: conduza ao menos 1 mentoria prática por mês e contribua com sugestões de melhoria coletiva nas reuniões com o TL."
+  },
+  maximo:{
+    na:"Dar o máximo começa por se reconectar com o que você gosta no trabalho. Liste 3 coisas que te dão energia no dia a dia. Foque nelas. Quando encontramos o que nos diverte, o máximo vem naturalmente.",
+    al:"Você dá boas contribuições e mantém equilíbrio. Para ir além: desafie-se com uma meta pessoal que pareça difícil. Crescimento acontece fora da zona de conforto — e costuma ser muito divertido.",
+    ac:"Energia e dedicação acima das expectativas. Use essa energia para elevar o time — sua disposição é contagiante. Continue celebrando as conquistas do time e mantendo o ambiente positivo."
+  }
+};
 // ── localStorage ──
 function getCult(n){ try{return JSON.parse(localStorage.getItem('j_cult_'+n)||'{}');}catch(e){return{};} }
 function saveCult(n,d){ try{localStorage.setItem('j_cult_'+n,JSON.stringify(d));}catch(e){} }
@@ -568,6 +674,8 @@ function onFileChange(e){
       document.getElementById('upzone').style.display = 'none';
       renderSummary();
       renderGrid();
+      document.getElementById('analysis-panel').style.display='block';
+      renderAnalysis();
       toast('✅ '+rows.length+' executivos carregados!', true);
     }catch(err){
       toast('Erro: '+err.message, false);
@@ -957,7 +1065,9 @@ function buildPerf(nome){
   <div class="prof-grid">${PROFILE_CATS.map(cat=>{
     const rat=prof[cat.k]||0;
     const stars=Array.from({length:5},(_,i)=>`<span class="star ${i<rat?'on':''}" onclick="setRat('${nome}','${cat.k}',${i+1})" title="${notes[i+1]||''}">★</span>`).join('');
-    return `<div class="prof-item"><div class="prof-l">${cat.ico} ${cat.lbl}</div><div class="stars">${stars}</div><div class="prof-n">${rat>0?notes[rat]:'Clique para avaliar'}</div></div>`;
+    const tipKey=rat<=2&&rat>0?'na':rat===3?'al':rat>=4?'ac':null;
+    const tipTxt=tipKey&&PROF_TIPS[cat.k]?PROF_TIPS[cat.k][tipKey]:'';
+    return `<div class="prof-item"><div class="prof-l">${cat.ico} ${cat.lbl}</div><div class="stars">${stars}</div><div class="prof-n">${rat>0?notes[rat]:'Clique para avaliar'}</div>${tipTxt?`<div class="prof-tip"><b>💡 Dica:</b> ${tipTxt}</div>`:''}</div>`;
   }).join('')}</div>`;
 }
 function setRat(nome,k,val){ const p=getProf(nome); p[k]=val; saveProf(nome,p); renderTab(); }
@@ -995,9 +1105,12 @@ function buildCult(nome){
     const cur=d[p.k]||null;
     const opts=CULT_OPTS.map(o=>`<span class="cult-opt ${cur===o.k?o.cls:''}"
       onclick="setCultRat('${nome}','${p.k}','${o.k}')">${o.lbl}</span>`).join('');
+    const tipKey=cur==='na'?'na':cur==='al'?'al':cur==='ac'?'ac':null;
+    const tipTxt=tipKey&&CULT_TIPS[p.k]?CULT_TIPS[p.k][tipKey]:'';
     return `<div class="cult-item">
       <div class="cult-pilar">🔷 ${p.lbl}</div>
       <div class="cult-opts">${opts}</div>
+      ${tipTxt?`<div class="prof-tip" style="margin-top:8px"><b>💡 Dica:</b> ${tipTxt}</div>`:''}
     </div>`;
   }).join('');
 
@@ -1054,6 +1167,115 @@ function regenMsg(nome,wi){ const ta=document.getElementById(`mta_${esc(nome)}`)
 function copyMsg(nome){ const ta=document.getElementById(`mta_${esc(nome)}`); if(!ta)return; navigator.clipboard?.writeText(ta.value).then(()=>toast('Copiado!',true)).catch(()=>{ta.select();document.execCommand('copy');toast('Copiado!',true)}); }
 function sendWA(nome){ const ta=document.getElementById(`mta_${esc(nome)}`); if(ta)window.open('https://wa.me/?text='+encodeURIComponent(ta.value),'_blank'); }
 function sendEmail(nome,wi){ const pl=PLANS[nome]; const ta=document.getElementById(`mta_${esc(nome)}`); const sub=`Direcionamento FDVP — ${pl?.nm||nome} — ${new Date().toLocaleDateString('pt-BR')}`; if(ta)window.open(`mailto:?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(ta.value)}`,'_blank'); }
+
+
+// ── Analysis Panel ──
+function renderAnalysis(){
+  const panel=document.getElementById('analysis-panel');
+  const body=document.getElementById('ap-body');
+  if(!CSV){panel.style.display='none';return;}
+  panel.style.display='block';
+  body.innerHTML='<div class="ap-body">'+buildAnalysis()+'</div>';
+}
+
+function buildAnalysis(){
+  const {e,r:rem,tot,pct:ep}=elapsed();
+  const wk=curWeek();
+  const wkLbl=['','S1 (05–09/Mai)','S2 (12–16/Mai)','S3 (19–23/Mai)','S4 (26–30/Mai)'][wk]||'';
+  const acima=CSV.filter(r=>v(r.ATG_PERFORMANCE)>=100).length;
+  const atgs=CSV.map(r=>v(r.ATG_PERFORMANCE)).filter(x=>x!==null);
+  const media=atgs.length?Math.round(atgs.reduce((a,b)=>a+b,0)/atgs.length):0;
+  const gestao=Math.round((acima/CSV.length)*40);
+  const criticos=CSV.filter(r=>v(r.ATG_PERFORMANCE)<50).map(r=>PLANS[r.NOME]?.nm||r.NOME.split(' ')[0]);
+  const destaque=CSV.filter(r=>v(r.ATG_PERFORMANCE)>=100).map(r=>PLANS[r.NOME]?.nm||r.NOME.split(' ')[0]);
+
+  // Auto message
+  const urgencia = acima===0?'crítico e exige atenção máxima':
+    acima<CSV.length*0.5?'de alerta — menos da metade do time na meta':
+    acima<CSV.length?'positivo mas ainda há trabalho a fazer':'excelente — time completo na meta!';
+
+  const msg = `Olá Senhor Guilherme. O momento agora é ${urgencia}. `
+    + `Estamos na ${wkLbl} de maio com ${ep}% do mês decorrido (${e} de ${tot} dias úteis). `
+    + `A média do HUB está em ${media}% de ATG_PERFORMANCE — `
+    + (acima===0?`nenhum executivo atingiu a meta individual ainda. `
+      :`${acima} executivo${acima>1?'s':''} ${acima>1?'estão':'está'} acima de 100%${destaque.length?' ('+destaque.join(', ')+')':''}. `)
+    + `O pilar Gestão projeta ${gestao}% de ${40}% possíveis. `
+    + (criticos.length?`Atenção imediata para: ${criticos.join(', ')} — abaixo de 50%. `:'')
+    + `Com ${rem} dias úteis restantes, `
+    + (rem<=5?'o sprint final exige foco total nos ofensores e garantia de PRI de todos os sellers.'
+      :rem<=10?'ainda dá tempo de virar o jogo com ações certeiras nos pilares mais defasados.'
+      :'há tempo suficiente para recuperação — consistência de rota e acompanhamento diário são fundamentais.');
+
+  // KPI table
+  const kpiCols = [
+    {k:'ATG_CONQUISTA', lbl:'Conquista'},
+    {k:'ATG_MAS',       lbl:'MAS/Aderência'},
+    {k:'ATG_TPV',       lbl:'TPV'},
+    {k:'ATG_PRI_FINAL', lbl:'PRI/Pricing'},
+    {k:'ATG_PERFORMANCE',lbl:'ATG Geral'}
+  ];
+  const kpiTblRows = kpiCols.map(col=>{
+    const sorted=[...CSV].filter(r=>v(r[col.k])!==null)
+      .sort((a,b)=>(v(b[col.k])||0)-(v(a[col.k])||0));
+    if(!sorted.length) return '';
+    const best=sorted[0], worst=sorted[sorted.length-1];
+    const bNm=PLANS[best.NOME]?.nm||best.NOME.split(' ')[0];
+    const wNm=PLANS[worst.NOME]?.nm||worst.NOME.split(' ')[0];
+    return `<tr>
+      <td style="font-weight:700">${col.lbl}</td>
+      <td><span class="rank-badge rb-best">🥇 ${bNm}</span> <span style="font-size:10px;color:var(--gn);font-weight:700">${v(best[col.k])}%</span></td>
+      <td><span class="rank-badge rb-worst">⚠️ ${wNm}</span> <span style="font-size:10px;color:var(--rd);font-weight:700">${v(worst[col.k])}%</span></td>
+    </tr>`;
+  }).join('');
+
+  // Value proposition per exec
+  const vpCards = CSV.map(row=>{
+    const pl=PLANS[row.NOME]; if(!pl)return'';
+    const atg=v(row.ATG_PERFORMANCE)||0;
+    const atgC=v(row.ATG_CONQUISTA)||0;
+    const atgM=v(row.ATG_MAS)||0;
+    const atgT=v(row.ATG_TPV)||0;
+    const atgP=v(row.ATG_PRI_FINAL)||0;
+    const st=stOf(atg);
+    const borderC=st==='meta'?'var(--gn)':st==='verde'?'var(--gnm)':st==='atencao'?'var(--am)':'var(--rd)';
+
+    // Build offers based on weakest KPIs
+    const offers=[];
+    const ps=pesos(pl.tipo);
+    if(ps.c>0 && atgC<70)   offers.push({tag:'Conquista',txt:'Intensificar prospecção em varejo parcelado (vestuário, construção, eletrônicos) com ticket >R$30k. Validar CNPJ e faturamento antes de cada proposta.'});
+    if(atgM<70)             offers.push({tag:'MAS/Aderência',txt:'Onboarding de Software PDV, Link de Pagamento e Open Finance nos sellers de M1/M2 que ainda não atingiram R$20k/mês. Visitas de acompanhamento de faturamento.'});
+    if(atgT<70)             offers.push({tag:'TPV',txt:'Ativar parcelamento na maquininha, apresentar Crédito Parcelado e orientar o seller a incentivar clientes a parcelar. Focar nos top 5 sellers da carteira.'});
+    if(atgP<70)             offers.push({tag:'PRI/Pricing',txt:'Garantir que todos os sellers de M0 transacionaram. Ofertar produtos de maior receita bruta: parcelado acima de 6x, Mercado Crédito, Link de Pagamento com taxa diferenciada.'});
+    if(atg>=100)            offers.push({tag:'Manter ritmo',txt:'Acompanhar aderência M1/M2, ampliar carteira com sellers premium e apoiar colegas em dificuldade.'});
+
+    if(!offers.length) offers.push({tag:'Em dia',txt:'Continue o ritmo. Foco em manter aderência e crescer TPV com parcelamento ativo.'});
+
+    const tagsH=offers.map(o=>`<span class="vp-tag">${o.tag}</span>`).join('');
+    const offersH=offers.map(o=>`<div class="vp-offer">• ${o.txt}</div>`).join('');
+
+    return `<div class="vp-card" style="border-left-color:${borderC}">
+      <h4>${pl.nm}</h4>
+      <div class="vp-cargo">${pl.cargo} · <span style="color:${bc(atg)};font-weight:800">${atg}% ATG</span></div>
+      ${tagsH}
+      <div style="margin-top:7px">${offersH}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="ap-msg">${msg}</div>
+    <div class="ap-section">
+      <h3>🏆 Campeões e Ofensores por KPI</h3>
+      <div style="overflow-x:auto">
+        <table class="kpi-rank-tbl">
+          <thead><tr><th>KPI</th><th>Melhor</th><th>Mais Defasado</th></tr></thead>
+          <tbody>${kpiTblRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ap-section">
+      <h3>💡 Proposta de Valor por Executivo</h3>
+      <div class="vp-grid">${vpCards}</div>
+    </div>`;
+}
 
 // ── HUB Page ──
 function renderHub(){
@@ -1177,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', function(){
         CSV=rows;
         document.getElementById('upzone').style.display='none';
         document.getElementById('upd').textContent='Dados salvos ✓';
-        renderSummary(); renderGrid();
+        renderSummary(); renderGrid(); document.getElementById('analysis-panel').style.display='block';
       }
     }
   }catch(e){ console.warn('Restore failed:',e); }
