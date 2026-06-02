@@ -533,6 +533,8 @@ footer span{color:var(--y);font-weight:700}
       </div>
       <!-- Hub summary strip -->
       <div id="dir-hub-strip"></div>
+      <!-- Consolidated message block -->
+      <div id="dir-msg-block"></div>
       <!-- List -->
       <div id="dir-list"></div>
     </div>
@@ -2006,6 +2008,37 @@ function getMostRecentAcqByExec() {
   return byExec;
 }
 
+// ── Helper: build a styled message box HTML string ──
+function buildMsgBox(title, bg, msg) {
+  // Store message in a data attribute to avoid encodeURIComponent issues in onclick
+  const safeId = 'msgbox_' + Math.random().toString(36).slice(2,8);
+  // We'll use a data store pattern via a closure captured in window._msgStore
+  if (!window._msgStore) window._msgStore = {};
+  window._msgStore[safeId] = msg;
+  return `<div style="background:${bg};border-radius:12px;padding:16px 18px;margin-bottom:14px">
+    <div style="font-size:9px;font-weight:800;color:#7fa8d4;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">${title}</div>
+    <pre style="font-size:11px;color:#cce0f7;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;font-family:inherit">${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="msg-btn mb-bl" onclick="copyMsgStore('${safeId}')">📋 Copiar</button>
+      <button class="msg-btn mb-wa" onclick="waMsgStore('${safeId}')">📱 WhatsApp</button>
+    </div>
+  </div>`;
+}
+function copyMsgStore(id) {
+  const msg = window._msgStore && window._msgStore[id];
+  if (!msg) return;
+  navigator.clipboard?.writeText(msg).then(()=>toast('Copiado!',true)).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=msg;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copiado!',true);
+  });
+}
+function waMsgStore(id) {
+  const msg = window._msgStore && window._msgStore[id];
+  if (!msg) return;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+window.copyMsgStore = copyMsgStore;
+window.waMsgStore = waMsgStore;
+
 // ── RENDER DIRECIONAMENTOS ──
 function renderDirecionamentos() {
   if (!CART) {
@@ -2132,49 +2165,33 @@ function renderDirecionamentos() {
     return;
   }
 
-  // ── Exec-level consolidated messages block ──
-  if (dirExecFilter !== 'all') {
-    // Show a consolidated message button for the selected exec
-    const pl = Object.values(PLANS).find((p,i) => Object.keys(PLANS)[i] === dirExecFilter);
-    const execNm = pl ? pl.nm : dirExecFilter.split(' ')[0];
-    const execSellers = getSellersWithHistory(dirExecFilter);
-    const consolidadoMsg = genMsgExecConsolidado(execNm, execSellers);
-    const encCons = encodeURIComponent(consolidadoMsg);
-    const existingBlock = document.getElementById('dir-exec-msg-block');
-    const blockHtml = `<div id="dir-exec-msg-block" style="background:var(--bl);border-radius:12px;padding:14px 16px;margin-bottom:12px">
-      <div style="font-size:9px;font-weight:800;color:#7fa8d4;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">📋 Mensagem Consolidada — ${execNm}</div>
-      <pre style="font-size:11px;color:#cce0f7;line-height:1.7;white-space:pre-wrap;margin-bottom:10px">${consolidadoMsg.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="msg-btn mb-bl" onclick="navigator.clipboard?.writeText(decodeURIComponent('${encCons}')).then(()=>toast('Copiado!',true))">📋 Copiar mensagem</button>
-        <button class="msg-btn mb-wa" onclick="window.open('https://wa.me/?text=${encCons}','_blank')">📱 Enviar pelo WhatsApp</button>
-      </div>
-    </div>`;
-    const stripEl = document.getElementById('dir-hub-strip');
-    if (stripEl) stripEl.insertAdjacentHTML('afterend', blockHtml);
-    const old = document.getElementById('dir-exec-msg-block');
-    if (old && old.previousElementSibling !== stripEl) old.remove();
-  } else {
-    // HUB level: consolidated message for the leader
-    const allExecsForMsg = [...new Set((CART||[]).filter(r=>r.tim_month===mk&&r.EXECUTIVO).map(r=>r.EXECUTIVO.trim()))];
-    const allExecsData = allExecsForMsg.map(exec => {
-      const pl = Object.values(PLANS).find((p,i)=>Object.keys(PLANS)[i]===exec);
-      return { execNm: pl?pl.nm:exec.split(' ')[0], sellers: getSellersWithHistory(exec) };
-    });
-    const hubMsg = genMsgHubConsolidado(allExecsData);
-    const encHub = encodeURIComponent(hubMsg);
-    const hubBlock = `<div id="dir-hub-msg-block" style="background:linear-gradient(135deg,#041f40,#0d5cad);border-radius:12px;padding:14px 16px;margin-bottom:12px">
-      <div style="font-size:9px;font-weight:800;color:#7fa8d4;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">📊 Briefing de Carteira — HUB SP86 (mensagem para o time)</div>
-      <pre style="font-size:11px;color:#cce0f7;line-height:1.7;white-space:pre-wrap;margin-bottom:10px">${hubMsg.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="msg-btn mb-bl" onclick="navigator.clipboard?.writeText(decodeURIComponent('${encHub}')).then(()=>toast('Copiado!',true))">📋 Copiar briefing HUB</button>
-        <button class="msg-btn mb-wa" onclick="window.open('https://wa.me/?text=${encHub}','_blank')">📱 WhatsApp</button>
-      </div>
-    </div>`;
-    const stripEl2 = document.getElementById('dir-hub-strip');
-    if (stripEl2) {
-      const old2 = document.getElementById('dir-hub-msg-block');
-      if (old2) old2.remove();
-      stripEl2.insertAdjacentHTML('afterend', hubBlock);
+  // ── Consolidated message block — rendered into dedicated div ──
+  const msgBlockEl = document.getElementById('dir-msg-block');
+  if (msgBlockEl) {
+    if (dirExecFilter !== 'all') {
+      // Individual exec message
+      const plExec = Object.values(PLANS).find((p,i) => Object.keys(PLANS)[i] === dirExecFilter);
+      const execNmMsg = plExec ? plExec.nm : dirExecFilter.split(' ').slice(0,2).join(' ');
+      const execSellers = getSellersWithHistory(dirExecFilter);
+      const consolidadoMsg = genMsgExecConsolidado(execNmMsg, execSellers);
+      msgBlockEl.innerHTML = buildMsgBox(
+        '📋 Mensagem Consolidada para ' + execNmMsg,
+        'var(--bl)',
+        consolidadoMsg
+      );
+    } else {
+      // HUB briefing
+      const allExecsForMsg = [...new Set((CART||[]).filter(r=>r.tim_month===mk&&r.EXECUTIVO).map(r=>r.EXECUTIVO.trim()))];
+      const allExecsData = allExecsForMsg.map(exec => {
+        const plE = Object.values(PLANS).find((p,i)=>Object.keys(PLANS)[i]===exec);
+        return { execNm: plE?plE.nm:exec.split(' ')[0], sellers: getSellersWithHistory(exec) };
+      });
+      const hubMsg = genMsgHubConsolidado(allExecsData);
+      msgBlockEl.innerHTML = buildMsgBox(
+        '📊 Briefing de Carteira — HUB SP86',
+        'linear-gradient(135deg,#041f40,#0d5cad)',
+        hubMsg
+      );
     }
   }
 
