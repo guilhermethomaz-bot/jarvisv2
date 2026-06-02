@@ -1200,8 +1200,9 @@ function renderCartTable(allSellers){
   </tr></thead><tbody>
   ${filtered.map(s=>{
     const tc=tierColors[s.tier];
-    const pl=Object.values(PLANS).find(p=>s.exec&&p.nm.split(' ')[0]&&s.exec.startsWith(p.nm.split(' ')[0].toUpperCase()));
-    const nm=pl?pl.nm:s.exec?s.exec.split(' ')[0]:'—';
+    const plKey=Object.keys(PLANS).find(k=>k===s.exec);
+    const pl=plKey?PLANS[plKey]:null;
+    const nm=pl?pl.nm:(s.exec?s.exec.split(' ').slice(0,2).map(w=>w.charAt(0)+w.slice(1).toLowerCase()).join(' '):'—');
     const flag=(v,lbl)=>v==='1'?`<span style="color:var(--gn);font-weight:700">${lbl}</span>`:`<span style="color:#e53935">✗</span>`;
     return`<tr>
       <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.nome}</td>
@@ -1979,6 +1980,31 @@ function toggleDirCard(id) {
   if (ico) ico.textContent = dirExpanded[id] ? '▲' : '▼';
 }
 window.toggleDirCard = toggleDirCard;
+
+// ── Days since a date string ──
+function daysSince(dateStr) {
+  if (!dateStr || dateStr === '-' || dateStr === '') return null;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  } catch { return null; }
+}
+
+// ── Most recent acquisition date per exec (current month) ──
+function getMostRecentAcqByExec() {
+  if (!CART) return {};
+  const mk = curMonthKey();
+  const rows = CART.filter(r => r.tim_month === mk && r.EXECUTIVO && r['DT AQUISICAO']);
+  const byExec = {};
+  rows.forEach(r => {
+    const exec = r.EXECUTIVO.trim();
+    if (!byExec[exec] || r['DT AQUISICAO'] > byExec[exec]) {
+      byExec[exec] = r['DT AQUISICAO'];
+    }
+  });
+  return byExec;
+}
 
 // ── RENDER DIRECIONAMENTOS ──
 function renderDirecionamentos() {
