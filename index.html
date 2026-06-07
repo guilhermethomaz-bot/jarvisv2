@@ -1393,7 +1393,7 @@ function buildCartPanel(nome){
   }).join('');
 
   return alertasH+summH+
-    `<div class="cart-section"><div class="cart-title">Sellers (${sellers.length}) — ordenados por TPV M0 mai/26</div>${sellersH}</div>`;
+    `<div class="cart-section"><div class="cart-title">Sellers (${sellers.length}) — ordenados por TPV M0 ${monthLbl(monthKeys().M0)}</div>${sellersH}</div>`;
 }
 
 /* ══════════════════════════════════════════════════
@@ -1445,9 +1445,9 @@ function renderCartTable(allSellers){
 
   const html=`<thead><tr>
     <th>Seller</th><th>Executivo</th>
-    <th onclick="sortCart('tpv_m0')" style="cursor:pointer">TPV M0 mai ↕</th>
-    <th onclick="sortCart('tpv_m1')" style="cursor:pointer">TPV M1 abr ↕</th>
-    <th onclick="sortCart('tpv_m2')" style="cursor:pointer">TPV M2 mar ↕</th>
+    <th onclick="sortCart('tpv_m0')" style="cursor:pointer">TPV M0 ${monthLbl(monthKeys().M0).split('/')[0]} ↕</th>
+    <th onclick="sortCart('tpv_m1')" style="cursor:pointer">TPV M1 ${monthLbl(monthKeys().M1).split('/')[0]} ↕</th>
+    <th onclick="sortCart('tpv_m2')" style="cursor:pointer">TPV M2 ${monthLbl(monthKeys().M2).split('/')[0]} ↕</th>
     <th>Tier</th><th>PT</th><th>PIX</th><th>OPF</th><th>SWE</th><th>MAS</th><th>Alertas</th>
   </tr></thead><tbody>
   ${filtered.map(s=>{
@@ -2583,9 +2583,9 @@ function renderDirecionamentos() {
       </div>
       <div class="dir-body ${dirExpanded[id] ? 'open' : ''}" id="dirb_${id}">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;text-align:center">
-          <div style="background:var(--g2);border-radius:7px;padding:7px;border:1px solid var(--bdr)"><div style="font-size:9px;font-weight:800;color:#aaa;margin-bottom:2px">M0 (jun)</div><div style="font-size:13px;font-weight:900;color:${bc(s.tpv_m0>=20000?100:s.tpv_m0>0?50:0)}">${s.tpv_m0>0?fK(s.tpv_m0):'—'}</div></div>
-          <div style="background:var(--g2);border-radius:7px;padding:7px;border:1px solid var(--bdr)"><div style="font-size:9px;font-weight:800;color:#aaa;margin-bottom:2px">M1 (mai)</div><div style="font-size:13px;font-weight:900;color:#555">${s.tpv_m1>0?fK(s.tpv_m1):'—'}</div></div>
-          <div style="background:var(--g2);border-radius:7px;padding:7px;border:1px solid var(--bdr)"><div style="font-size:9px;font-weight:800;color:#aaa;margin-bottom:2px">M2 (abr)</div><div style="font-size:13px;font-weight:900;color:#aaa">${s.tpv_m2>0?fK(s.tpv_m2):'—'}</div></div>
+          <div style="background:var(--g2);border-radius:7px;padding:7px;border:1px solid var(--bdr)"><div style="font-size:9px;font-weight:800;color:#aaa;margin-bottom:2px">M0 (${monthLbl(monthKeys().M0).split('/')[0]})</div><div style="font-size:13px;font-weight:900;color:${bc(s.tpv_m0>=20000?100:s.tpv_m0>0?50:0)}">${s.tpv_m0>0?fK(s.tpv_m0):'—'}</div></div>
+          <div style="background:var(--g2);border-radius:7px;padding:7px;border:1px solid var(--bdr)"><div style="font-size:9px;font-weight:800;color:#aaa;margin-bottom:2px">M1 (${monthLbl(monthKeys().M1).split('/')[0]})</div><div style="font-size:13px;font-weight:900;color:#555">${s.tpv_m1>0?fK(s.tpv_m1):'—'}</div></div>
+          <div style="background:var(--g2);border-radius:7px;padding:7px;border:1px solid var(--bdr)"><div style="font-size:9px;font-weight:800;color:#aaa;margin-bottom:2px">M2 (${monthLbl(monthKeys().M2).split('/')[0]})</div><div style="font-size:13px;font-weight:900;color:#aaa">${s.tpv_m2>0?fK(s.tpv_m2):'—'}</div></div>
         </div>
         <div class="dir-flags">${flagsHtml}</div>
         <div class="dir-motivos">${motivosHtml}</div>
