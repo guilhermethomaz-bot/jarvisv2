@@ -394,6 +394,7 @@ footer span{color:var(--y);font-weight:700}
 .dir-seller{flex:1;min-width:0}
 .dir-seller-name{font-size:13px;font-weight:800;color:var(--dk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dir-seller-exec{font-size:10px;color:#888;font-weight:600}
+.novo-badge{display:inline-block;background:var(--gnbg);color:var(--gn);font-size:9px;font-weight:800;padding:1px 6px;border-radius:10px;border:1px solid #a5d6a7;white-space:nowrap;vertical-align:middle;line-height:1.5}
 .dir-tpv{font-size:12px;font-weight:800;color:var(--gn);flex-shrink:0}
 .dir-atd{display:flex;gap:6px;flex-shrink:0}
 .atd-btn{border:none;border-radius:8px;padding:6px 11px;font-size:10px;font-weight:800;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -833,8 +834,9 @@ function buildSellersFromRaw(raw){
   body.forEach(r=>{
     const exec=(r[0]||'').trim(),seller=(r[1]||'').trim(),cust=(r[3]||'').trim(),tm=(r[5]||'').trim();
     if(!cust||!tm)return;
-    if(!A[cust])A[cust]={exec,nome:seller,tpv:{},proj:{}};
+    if(!A[cust])A[cust]={exec,nome:seller,tpv:{},proj:{},cohort:''};
     A[cust].tpv[tm]=(A[cust].tpv[tm]||0)+numBR(r[7]);
+    const mesEnt=(r[2]||'').trim();if(mesEnt&&!A[cust].cohort)A[cust].cohort=mesEnt; // Mes = mês de entrada (coorte)
     const pj=numBR(r[4]);if(pj)A[cust].proj[tm]=pj;
   });
   body.forEach(r=>{
@@ -857,12 +859,14 @@ function buildSellersFromRaw(raw){
       swe:(b&&b.swe)||'0', op:(b&&b.op)||'0',
       tpv_m0:(a&&a.tpv[M0])||0, tpv_m1:(a&&a.tpv[M1])||0, tpv_m2:(a&&a.tpv[M2])||0,
       proj_m0:(a&&a.proj[M0])||0,
+      cohort:(a&&a.cohort)||'', isNovo:false,
       tier:0, adh_m1:false, adh_m2:false
     });
   });
   out.forEach(s=>{
     s.tier = s.tpv_m0>=100000?5:s.tpv_m0>=75000?4:s.tpv_m0>=30000?3:s.tpv_m0>=20000?2:s.tpv_m0>0?1:0;
     s.adh_m1 = s.tpv_m1>=20000; s.adh_m2 = s.tpv_m2>=20000;
+    s.isNovo = s.cohort===M0; // entrou no mês corrente
     s.peak = Math.max(s.tpv_m0,s.tpv_m1,s.tpv_m2);
   });
   return out.sort((x,y)=>y.tpv_m0-x.tpv_m0);
@@ -1054,22 +1058,31 @@ function getAllCarteira(){
   return{sellers:sellers.sort((a,b)=>b.tpv_m0-a.tpv_m0),alertas:alertasGeral};
 }
 
-/* Médias de TPV M0/M1 por executivo (sellers com TPV>0 no mês) */
+/* Médias de TPV por executivo, separando no mês corrente (M0):
+   - NOVOS: sellers que entraram no mês corrente (cohort = M0)
+   - CARTEIRA: sellers que entraram em meses anteriores e faturam em M0
+   M1 = TPV do mês anterior (mês fechado), mantido como referência. */
 function getMediasTPV(){
   const by={};
   SELLERS.forEach(s=>{
-    if(!by[s.exec])by[s.exec]={exec:s.exec,sumM0:0,nM0:0,sumM1:0,nM1:0,sumM2:0,nM2:0,sellers:0};
+    if(!by[s.exec])by[s.exec]={exec:s.exec,
+      sumM0:0,nM0:0, sumNovo:0,nNovo:0,nNovoTot:0, sumCart:0,nCart:0,nCartTot:0,
+      sumM1:0,nM1:0, sumM2:0,nM2:0, sellers:0};
     const o=by[s.exec];o.sellers++;
     if(s.tpv_m0>0){o.sumM0+=s.tpv_m0;o.nM0++;}
+    if(s.isNovo){ o.nNovoTot++; if(s.tpv_m0>0){o.sumNovo+=s.tpv_m0;o.nNovo++;} }
+    else        { o.nCartTot++; if(s.tpv_m0>0){o.sumCart+=s.tpv_m0;o.nCart++;} }
     if(s.tpv_m1>0){o.sumM1+=s.tpv_m1;o.nM1++;}
     if(s.tpv_m2>0){o.sumM2+=s.tpv_m2;o.nM2++;}
   });
   return Object.values(by).map(o=>({
     ...o,
     avgM0:o.nM0?o.sumM0/o.nM0:0,
+    avgNovo:o.nNovo?o.sumNovo/o.nNovo:0,
+    avgCart:o.nCart?o.sumCart/o.nCart:0,
     avgM1:o.nM1?o.sumM1/o.nM1:0,
     avgM2:o.nM2?o.sumM2/o.nM2:0
-  })).sort((a,b)=>b.avgM0-a.avgM0);
+  })).sort((a,b)=>b.avgCart-a.avgCart);
 }
 
 /* Sellers que sairão da carteira = adquiridos no mês M2 (saem na virada de mês) */
@@ -1376,7 +1389,7 @@ function buildCartPanel(nome){
       <div class="sr-dot" style="background:${tc}"></div>
       <div style="flex:1;min-width:0">
         <div class="sr-name">${s.nome}</div>
-        <div style="font-size:9px;color:#aaa">${s.dtAq?'Aq: '+s.dtAq.substring(0,10):''}</div>
+        <div style="font-size:9px;color:#aaa">${s.isNovo?'<span class="novo-badge">🌱 novo</span> ':''}${s.dtAq?'Aq: '+s.dtAq.substring(0,10):''}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div class="sr-tpv" style="color:${tc}">${fK(s.tpv_m0)}</div>
@@ -1457,7 +1470,7 @@ function renderCartTable(allSellers){
     const nm=pl?pl.nm:(s.exec?s.exec.split(' ').slice(0,2).map(w=>w.charAt(0)+w.slice(1).toLowerCase()).join(' '):'—');
     const flag=(v,lbl)=>v==='1'?`<span style="color:var(--gn);font-weight:700">${lbl}</span>`:`<span style="color:#e53935">✗</span>`;
     return`<tr>
-      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.nome}</td>
+      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.nome}${s.isNovo?' (novo no mês)':''}">${s.isNovo?'🌱 ':''}${s.nome}</td>
       <td style="font-size:10px;color:#888;white-space:nowrap">${nm}</td>
       <td><span class="tpv-pill tpv-${s.tier}">${s.tpv_m0>0?fK(s.tpv_m0):'—'}</span></td>
       <td style="font-size:11px;color:${s.adh_m1?'var(--gn)':'var(--am)'}">${s.tpv_m1>0?fK(s.tpv_m1):'\u2014'}</td>
@@ -1838,9 +1851,13 @@ function saveCartHist(){
     const now=new Date();const dk=now.toLocaleDateString('pt-BR');
     const medias=getMediasTPV();
     const entry={date:dk,ts:now.getTime(),ex:{}};
-    medias.forEach(m=>{entry.ex[m.exec]={avgM0:Math.round(m.avgM0),avgM1:Math.round(m.avgM1),nM0:m.nM0,nM1:m.nM1,sellers:m.sellers};});
+    medias.forEach(m=>{entry.ex[m.exec]={avgM0:Math.round(m.avgM0),avgNovo:Math.round(m.avgNovo),avgCart:Math.round(m.avgCart),avgM1:Math.round(m.avgM1),nM0:m.nM0,nNovo:m.nNovo,nNovoTot:m.nNovoTot,nCart:m.nCart,nM1:m.nM1,sellers:m.sellers};});
     const allM0=SELLERS.filter(s=>s.tpv_m0>0);
     entry.hubAvgM0=allM0.length?Math.round(allM0.reduce((a,s)=>a+s.tpv_m0,0)/allM0.length):0;
+    const novos=SELLERS.filter(s=>s.isNovo&&s.tpv_m0>0);
+    entry.hubAvgNovo=novos.length?Math.round(novos.reduce((a,s)=>a+s.tpv_m0,0)/novos.length):0;
+    const cart=SELLERS.filter(s=>!s.isNovo&&s.tpv_m0>0);
+    entry.hubAvgCart=cart.length?Math.round(cart.reduce((a,s)=>a+s.tpv_m0,0)/cart.length):0;
     const allM1=SELLERS.filter(s=>s.tpv_m1>0);
     entry.hubAvgM1=allM1.length?Math.round(allM1.reduce((a,s)=>a+s.tpv_m1,0)/allM1.length):0;
     const ex=h.findIndex(x=>x.date===dk);if(ex>=0)h[ex]=entry;else h.push(entry);
@@ -2572,7 +2589,7 @@ function renderDirecionamentos() {
       <div class="dir-head" onclick="toggleDirCard('${id}')">
         <span class="dir-prio dp-${isDone ? 'done' : topTipo}">${isDone ? '✅ Atendido' : topIco + ' ' + { critico: 'Crítico', atencao: 'Atenção', info: 'Info' }[topTipo]}</span>
         <div class="dir-seller">
-          <div class="dir-seller-name">${s.seller}</div>
+          <div class="dir-seller-name">${s.seller}${s.isNovo?' <span class="novo-badge">🌱 novo</span>':''}</div>
           <div class="dir-seller-exec">${execNm} · ${tpvTrend} · ${s.ultTrans ? 'Trans: '+s.ultTrans : 'Sem transação'}</div>
         </div>
         <div class="dir-atd">
@@ -2668,7 +2685,7 @@ function renderHubCart() {
       const trendIco = s.tpv_m1>0?(s.tpv_m0>=s.tpv_m1?'<span style="color:var(--gn)">⬆</span>':'<span style="color:var(--rd)">⬇</span>'):'';
       const stMap={'critico':'🔴','atencao':'🟡','info':'🔵','ok':'✅'};
       return `<tr>
-        <td style="font-weight:700;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.seller}">${s.seller}</td>
+        <td style="font-weight:700;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.seller}${s.isNovo?' (novo no mês)':''}">${s.isNovo?'🌱 ':''}${s.seller}</td>
         <td><span style="font-weight:800;color:${m0c}">${s.tpv_m0>0?fK(s.tpv_m0):'—'}</span> ${trendIco}</td>
         <td style="color:#888;font-size:10px">${s.tpv_m1>0?fK(s.tpv_m1):'—'}</td>
         <td style="font-size:10px">${churnAl?'<span style="color:var(--rd);font-weight:700">−'+churnAl.dropPct+'%</span>':s.tpv_m0===0&&s.tpv_m1>0?'<span style="color:var(--rd)">parou</span>':''}</td>
@@ -2747,57 +2764,61 @@ function renderTpvMedias(){
   const medias=getMediasTPV();
   const hist=loadCartHist();
   const prev=hist.length>=2?hist[hist.length-2]:null;
-  // HUB-level
-  const allM0=SELLERS.filter(s=>s.tpv_m0>0),allM1=SELLERS.filter(s=>s.tpv_m1>0);
-  const hubAvgM0=allM0.length?allM0.reduce((a,s)=>a+s.tpv_m0,0)/allM0.length:0;
+  // HUB-level — separa NOVOS (entraram em M0) x CARTEIRA (entraram antes), ambos no TPV de M0
+  const novos=SELLERS.filter(s=>s.isNovo&&s.tpv_m0>0), novosTot=SELLERS.filter(s=>s.isNovo);
+  const cart=SELLERS.filter(s=>!s.isNovo&&s.tpv_m0>0);
+  const allM1=SELLERS.filter(s=>s.tpv_m1>0);
+  const hubAvgNovo=novos.length?novos.reduce((a,s)=>a+s.tpv_m0,0)/novos.length:0;
+  const hubAvgCart=cart.length?cart.reduce((a,s)=>a+s.tpv_m0,0)/cart.length:0;
   const hubAvgM1=allM1.length?allM1.reduce((a,s)=>a+s.tpv_m1,0)/allM1.length:0;
-  const prevHubM0=prev?prev.hubAvgM0:null;
-  const hubSparkM0=hist.map(h=>h.hubAvgM0||0);
+  const tpvNovo=novos.reduce((a,s)=>a+s.tpv_m0,0), tpvCart=cart.reduce((a,s)=>a+s.tpv_m0,0);
 
   const hubCards=`<div class="tpv-hub-row">
-    <div class="tpv-hub-card">
-      <div class="thc-lbl">Média TPV M0 · ${monthLbl(M0)}</div>
-      <div class="thc-val">${fK(hubAvgM0)}</div>
-      <div class="thc-dlt">${deltaBadge(Math.round(hubAvgM0),prevHubM0)}</div>
-      <div class="thc-spk">${spark(hubSparkM0,120,30,'#0d5cad')}</div>
-      <div class="thc-sub">${allM0.length} sellers ativos no mês</div>
-    </div>
     <div class="tpv-hub-card alt">
-      <div class="thc-lbl">Média TPV M1 · ${monthLbl(M1)}</div>
-      <div class="thc-val">${fK(hubAvgM1)}</div>
-      <div class="thc-dlt">${deltaBadge(Math.round(hubAvgM1),prev?prev.hubAvgM1:null)}</div>
-      <div class="thc-spk">${spark(hist.map(h=>h.hubAvgM1||0),120,30,'#43a047')}</div>
-      <div class="thc-sub">base de comparação (mês fechado)</div>
+      <div class="thc-lbl">Média TPV M0 · Novos · ${monthLbl(M0)}</div>
+      <div class="thc-val">${fK(hubAvgNovo)}</div>
+      <div class="thc-dlt">${deltaBadge(Math.round(hubAvgNovo),prev?prev.hubAvgNovo:null)}</div>
+      <div class="thc-spk">${spark(hist.map(h=>h.hubAvgNovo||0),120,30,'#a5d6a7')}</div>
+      <div class="thc-sub">Clientes que <b>entraram em ${monthLbl(M0)}</b> · ${novos.length}/${novosTot.length} faturando · TPV ${fK(tpvNovo)}</div>
+    </div>
+    <div class="tpv-hub-card">
+      <div class="thc-lbl">Média TPV Carteira · M0 · ${monthLbl(M0)}</div>
+      <div class="thc-val">${fK(hubAvgCart)}</div>
+      <div class="thc-dlt">${deltaBadge(Math.round(hubAvgCart),prev?prev.hubAvgCart:null)}</div>
+      <div class="thc-spk">${spark(hist.map(h=>h.hubAvgCart||0),120,30,'#7fc4ff')}</div>
+      <div class="thc-sub">Clientes que <b>entraram antes</b> e faturam em ${monthLbl(M0)} · ${cart.length} ativos · TPV ${fK(tpvCart)}</div>
     </div>
     <div class="tpv-hub-card warn">
-      <div class="thc-lbl">Uploads no histórico</div>
-      <div class="thc-val" style="color:var(--bl)">${hist.length}</div>
-      <div class="thc-sub" style="margin-top:18px">Cada upload diário alimenta a evolução. Suba a carteira todo dia para acompanhar o avanço.</div>
+      <div class="thc-lbl">Referência · ${monthLbl(M1)} (mês fechado)</div>
+      <div class="thc-val" style="color:var(--gn)">${fK(hubAvgM1)}</div>
+      <div class="thc-dlt">${deltaBadge(Math.round(hubAvgM1),prev?prev.hubAvgM1:null)}</div>
+      <div class="thc-sub" style="margin-top:10px">Média de TPV do mês anterior (todos os sellers ativos). Histórico: <b>${hist.length}</b> upload${hist.length===1?'':'s'}.</div>
     </div>
   </div>`;
 
   // per-exec table
   const rows=medias.map(m=>{
     const pe=prev&&prev.ex[m.exec]?prev.ex[m.exec]:null;
-    const sparkVals=hist.map(h=>h.ex[m.exec]?h.ex[m.exec].avgM0:0).filter((_,i,a)=>true);
+    const sparkVals=hist.map(h=>h.ex[m.exec]?(h.ex[m.exec].avgCart||0):0);
     const nm=execNmOf(m.exec);
-    const c0=m.avgM0>=20000?'var(--gn)':m.avgM0>=10000?'var(--am)':'var(--rd)';
+    const cc=m.avgCart>=20000?'var(--gn)':m.avgCart>=10000?'var(--am)':'var(--rd)';
+    const cn=m.avgNovo>=20000?'var(--gn)':m.avgNovo>=10000?'var(--am)':m.avgNovo>0?'var(--rd)':'#bbb';
     return `<tr>
       <td style="font-weight:800">${nm}</td>
-      <td style="text-align:center">${m.sellers}</td>
-      <td style="text-align:right"><span style="font-weight:900;color:${c0}">${fK(m.avgM0)}</span><div style="font-size:9px;color:#999">${m.nM0} ativos</div></td>
-      <td style="text-align:right">${deltaBadge(Math.round(m.avgM0),pe?pe.avgM0:null)}</td>
+      <td style="text-align:right"><span style="font-weight:900;color:${cc}">${fK(m.avgCart)}</span><div style="font-size:9px;color:#999">${m.nCart} ativos</div></td>
+      <td style="text-align:right">${deltaBadge(Math.round(m.avgCart),pe?pe.avgCart:null)}</td>
+      <td style="text-align:right"><span style="font-weight:900;color:${cn}">${m.avgNovo>0?fK(m.avgNovo):'—'}</span><div style="font-size:9px;color:#999">${m.nNovo}/${m.nNovoTot} novos</div></td>
       <td style="text-align:right;color:#555;font-weight:700">${fK(m.avgM1)}<div style="font-size:9px;color:#999">${m.nM1} ativos</div></td>
       <td>${spark(sparkVals,90,24,'#0d5cad')}</td>
     </tr>`;
   }).join('');
   const tableH=`<div class="tpv-card">
-    <div class="tpv-card-h">📊 Média de TPV por Executivo — evolução diária</div>
+    <div class="tpv-card-h">📊 Média de TPV por Executivo — Carteira vs. Novos (mês corrente)</div>
     <div style="overflow-x:auto"><table class="tpv-tbl">
-      <thead><tr><th>Executivo</th><th style="text-align:center">Sellers</th><th style="text-align:right">Média M0</th><th style="text-align:right">Δ vs. último upload</th><th style="text-align:right">Média M1</th><th>Evolução M0</th></tr></thead>
+      <thead><tr><th>Executivo</th><th style="text-align:right">Carteira M0</th><th style="text-align:right">Δ Carteira</th><th style="text-align:right">Novos M0</th><th style="text-align:right">${monthLbl(M1)}</th><th>Evolução Carteira</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
-    <div class="tpv-foot">A média M0 considera apenas sellers que transacionaram no mês. Compare M0 (mês corrente) com M1 (mês anterior fechado) para medir a evolução. O Δ compara com o upload anterior.</div>
+    <div class="tpv-foot"><b>Carteira M0</b> = média de TPV em ${monthLbl(M0)} dos clientes que entraram em meses anteriores. <b>Novos M0</b> = média de TPV em ${monthLbl(M0)} dos clientes que entraram neste mês. Ambas consideram só quem faturou. ${monthLbl(M1)} é o mês fechado de referência. O Δ e a evolução acompanham a Carteira (base estável) entre uploads.</div>
   </div>`;
   area.innerHTML=hubCards+tableH;
   renderSaindo('all');
